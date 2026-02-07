@@ -1,0 +1,298 @@
+/* CSS Design System - Auraskin */
+:root {
+    --aura-pink: #f79da6;
+    /* Darker, more vibrant pink */
+    /* Baby Pink */
+    --aura-white: #FFFFF8;
+    /* Off-White */
+    --text-dark: #333333;
+    --text-light: #777777;
+    --shadow-soft: 0 4px 15px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    color: var(--text-dark);
+    background-color: var(--aura-white);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+h4 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Landing Section */
+.landing-screen {
+    height: 100vh;
+    background-color: #f79da6;
+    /* Darker pink for better saturation */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    /* Centered vertically to prevent cutoff */
+    padding-top: 0;
+    /* Centered instead of pinned to top */
+    text-align: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 2000;
+    transition: transform 1s cubic-bezier(0.85, 0, 0.15, 1), opacity 0.8s ease;
+}
+
+.landing-screen.fade-out {
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.landing-logo {
+    max-width: 650px;
+    /* Large and prominent */
+    width: 90%;
+    margin-top: -10vh;
+    /* Shifted slightly up */
+    margin-bottom: -4rem;
+    /* Tucked closer to logo */
+    image-rendering: -webkit-optimize-contrast;
+    /* Sharpness fix */
+    image-rendering: crisp-edges;
+}
+
+.btn-entrer {
+    background-color: #f8c3c8;
+    /* Slightly deeper soft pink for the button */
+    color: #8b4a50;
+    /* Option 1: Deep Burgundy */
+    width: 160px;
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50% !important;
+    /* Perfect circle */
+    text-decoration: none;
+    font-size: 1.6rem;
+    font-weight: 500;
+    font-family: 'Playfair Display', serif;
+    border: none;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    position: absolute;
+    /* Fixed relative to screen */
+    bottom: 40px;
+    /* Pinned to bottom */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2010;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.btn-entrer.expanding {
+    transform: translateX(-50%) scale(100);
+    /* Grow to cover screen */
+    background-color: #f8c3c8;
+    pointer-events: none;
+    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 2020;
+}
+
+.btn-entrer:hover {
+    transform: translateX(-50%) scale(1.08);
+    /* Maintain positioning on hover */
+    background-color: #ffffff;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Brand Circles Section */
+.brand-nav {
+    padding: 100px 0;
+    background-color: #ffffff;
+}
+
+.brand-scroll {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+    flex-wrap: nowrap;
+    padding: 40px 0;
+    width: 100%;
+}
+
+.brand-circle {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+    flex-shrink: 0;
+    border: none;
+}
+
+.brand-circle:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* Brand Colors & Typography */
+.brand-cosrx {
+    background-color: #000000;
+    color: #ffffff;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+}
+
+.brand-mixsoon {
+    background-color: #A8CEC7;
+    color: #ffffff;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+}
+
+.brand-glow {
+    background-color: #F8E3FD;
+    color: #000000;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    padding: 10px;
+}
+
+.brand-centella {
+    background-color: #558B4F;
+    color: #ffffff;
+    font-family: 'Playfair Display', serif;
+    font-size: 0.9rem;
+    padding: 10px;
+}
+
+.brand-centella small {
+    display: block;
+    font-size: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 4px;
+    font-family: 'Inter', sans-serif;
+}
+
+.brand-anua {
+    background-color: #FFFFFF;
+    color: #000;
+    border: 1px solid #eee !important;
+    font-family: 'Inter', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 500;
+}
+
+.brand-o {
+    background-color: #FFFFFF;
+    color: #000;
+    border: 1px solid #eee !important;
+    font-family: 'Inter', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 700;
+}
+
+/* Product Grid */
+.shop-section {
+    padding: 120px 0;
+    border-top: 1px solid #f5f5f5;
+}
+
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 30px;
+}
+
+.product-card {
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    transition: var(--transition);
+    border: 1px solid #eee;
+}
+
+.product-card:hover {
+    box-shadow: var(--shadow-soft);
+}
+
+.product-image {
+    height: 250px;
+    background: #f9f9f9;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.product-price {
+    font-weight: 700;
+    color: var(--aura-pink);
+    font-size: 1.25rem;
+    margin-top: 10px;
+}
+
+/* Size Selector Styles */
+.size-selector {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    justify-content: center;
+}
+
+.size-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.8);
+    padding: 5px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+}
+
+.size-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.size-btn.active {
+    background: #f79da6;
+    border-color: #f79da6;
+    color: #fff;
+    font-weight: 600;
+}

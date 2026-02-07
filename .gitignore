@@ -1,0 +1,5 @@
+# Ignore zip file
+auraskin-website.zip
+
+# VS Code settings
+.vscode/

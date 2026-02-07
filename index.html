@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraSkin v2 | Unveil your inner Aura</title>
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --target-pink: #f8c3c8;
+            /* The background color now matches the button precisely */
+            --landing-pink: #f79da6;
+            /* The landing screen pink */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--target-pink);
+            overflow: hidden;
+        }
+
+        /* 1. LANDING SCREEN */
+        .landing-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background-color: var(--landing-pink);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            transition: transform 0.8s cubic-bezier(0.85, 0, 0.15, 1);
+        }
+
+        .landing-screen.hidden {
+            transform: translateY(-100%);
+        }
+
+        .landing-logo {
+            width: 80%;
+            max-width: 600px;
+            margin-top: -10vh;
+            margin-bottom: 20px;
+        }
+
+        .btn-entrer {
+            position: absolute;
+            bottom: 50px;
+            width: 160px;
+            height: 160px;
+            background-color: #f8c3c8;
+            color: #8b4a50;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6rem;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.3s ease, color 0.3s ease;
+        }
+
+        .btn-entrer.expanding {
+            transform: scale(100);
+            color: transparent;
+            pointer-events: none;
+            transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s ease;
+        }
+
+        /* 2. BRAND SECTION (MATCHING IMAGE) */
+        .brand-section {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .brand-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: nowrap;
+            /* Prevent wrapping for that clean row look */
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .brand-circle {
+            width: 155px;
+            /* Slightly larger circles */
+            height: 155px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            text-decoration: none;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 1.8s cubic-bezier(0.4, 0, 0.2, 1), transform 1.8s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+
+            /* Initial state for entrance animation */
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        .brand-circle.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .brand-circle:hover {
+            transform: scale(1.05);
+        }
+
+        .brand-circle.expanding {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(100);
+            z-index: 3000;
+            pointer-events: none;
+            color: transparent !important;
+            transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s ease;
+        }
+
+        /* 3. PRODUCTS SECTION */
+        .products-section {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background-color: transparent;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            /* Start from top to allow scrolling */
+            z-index: 4000;
+            padding: 80px 40px;
+            color: #fff;
+            /* Default to white for dark brands */
+            overflow-y: auto;
+            /* Enable scroll for many products */
+            transition: color 0.3s ease;
+        }
+
+        .products-section.light-theme {
+            color: #333;
+            /* Dark text for light backgrounds */
+        }
+
+        .products-section.light-theme .product-card {
+            background: rgba(255, 255, 255, 0.8);
+            /* More opaque */
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            color: #333;
+        }
+
+        .products-section.light-theme .product-name {
+            color: #1a1a1a;
+        }
+
+        .products-section.light-theme .product-tagline {
+            color: #666;
+        }
+
+        .products-section.light-theme .product-original-price {
+            color: #999;
+        }
+
+        .products-section.visible {
+            display: flex;
+        }
+
+        .products-header {
+            font-family: 'Playfair Display', serif;
+            font-size: 4rem;
+            margin-bottom: 60px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            font-weight: 700;
+        }
+
+        .products-header.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            width: 100%;
+            max-width: 1200px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease 0.3s, transform 0.8s ease 0.3s;
+        }
+
+        .products-grid.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .product-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-radius: 30px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.5s ease;
+            text-align: center;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .product-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+        }
+
+        .product-image-container {
+            width: 100%;
+            aspect-ratio: 1/1;
+            /* Keep it square */
+            margin-bottom: 25px;
+            border-radius: 20px;
+            overflow: hidden;
+            background: transparent;
+            /* Removed white background */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Removed box-shadow */
+        }
+
+        .product-image {
+            width: 90%;
+            height: 90%;
+            object-fit: contain;
+            /* Show the full product bottle */
+            transition: transform 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .product-card:hover .product-image {
+            transform: scale(1.05);
+        }
+
+        .product-info {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex-grow: 1;
+        }
+
+        .product-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            color: #fff;
+            line-height: 1.2;
+            margin-bottom: 5px;
+        }
+
+        .product-tagline {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+
+        .product-price-container {
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding-top: 15px;
+        }
+
+        .product-price {
+            font-weight: 600;
+            font-size: 1.25rem;
+            color: #f79da6;
+            /* High contrast pink */
+        }
+
+        .product-original-price {
+            text-decoration: line-through;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 1rem;
+        }
+
+        .btn-buy {
+            margin-top: 20px;
+            padding: 12px 32px;
+            border-radius: 40px;
+            border: none;
+            background-color: #f8c3c8;
+            color: #8b4a50;
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-buy:hover {
+            background-color: #fff;
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* BRAND SPECIFIC STYLES */
+        .brand-cosrx {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Playfair Display', serif;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+        }
+
+        .brand-mixsoon {
+            background-color: #a7ceca;
+            color: #fff;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            letter-spacing: -0.5px;
+        }
+
+        .brand-glow {
+            background-color: #f6e1f9;
+            /* Softer lavender/pink */
+            color: #000;
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+        }
+
+        .brand-skin1004 {
+            background-color: #fff;
+            color: #000;
+            padding: 0;
+            overflow: hidden;
+            /* Ensure image stays in circle */
+            border: 1px solid #eee !important;
+        }
+
+        .brand-circle.expanding img {
+            opacity: 0;
+            transition: opacity 0.1s ease;
+        }
+
+        .brand-anua {
+            background-color: #fff;
+            color: #000;
+            font-family: 'Inter', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 500;
+            letter-spacing: -0.5px;
+        }
+
+        .brand-o {
+            background-color: #fff;
+            color: #000;
+            font-family: 'Inter', sans-serif;
+            font-size: 2.6rem;
+            font-weight: 700;
+        }
+
+        /* 5. SEARCH UI */
+        .search-btn-floating {
+            position: fixed;
+            bottom: 100px;
+            /* Stacked above cart */
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background-color: #fff;
+            color: #333;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            z-index: 5000;
+            transition: transform 0.3s ease;
+            font-size: 1.2rem;
+        }
+
+        .search-btn-floating:hover {
+            transform: scale(1.1);
+        }
+
+        .search-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            z-index: 5002;
+            /* Above cart */
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 80px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .search-overlay.open {
+            display: flex;
+            opacity: 1;
+        }
+
+        .search-input-container {
+            position: relative;
+            width: 90%;
+            max-width: 600px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.5rem;
+            border: none;
+            border-bottom: 2px solid #ccc;
+            background: transparent;
+            font-family: 'Playfair Display', serif;
+            color: #333;
+            text-align: center;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-bottom-color: #f79da6;
+        }
+
+        .btn-close-search {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 2rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .search-results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            /* Same as product grid */
+            gap: 40px;
+            width: 90%;
+            max-width: 1200px;
+            margin-top: 50px;
+            padding-bottom: 50px;
+            overflow-y: auto;
+        }
+
+        /* Search result cards need dark text on light background */
+        .search-results-grid .product-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        .search-results-grid .product-name {
+            color: #1a1a1a;
+        }
+
+        .search-results-grid .product-tagline {
+            color: #666;
+            display: block !important;
+        }
+
+        .search-results-grid .product-original-price {
+            color: #999;
+        }
+
+        /* 4. SHOPPING CART */
+        .cart-btn-floating {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background-color: #fff;
+            color: #f79da6;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            z-index: 5000;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-size: 1.5rem;
+        }
+
+        .cart-btn-floating:hover {
+            transform: scale(1.1);
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #ff4757;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 700;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #fff;
+        }
+
+        .cart-drawer {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 5001;
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.05);
+        }
+
+        .cart-drawer.open {
+            transform: translateX(0);
+        }
+
+        .cart-header {
+            padding: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .cart-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: #333;
+            font-weight: 700;
+        }
+
+        .btn-close-cart {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.2s;
+        }
+
+        .btn-close-cart:hover {
+            color: #333;
+        }
+
+        .cart-items {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .cart-item {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            background: #fff;
+            padding: 10px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+        }
+
+        .cart-item-img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            border-radius: 10px;
+            background: #f9f9f9;
+        }
+
+        .cart-item-info {
+            flex-grow: 1;
+        }
+
+        .cart-item-name {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 2px;
+        }
+
+        .cart-item-price {
+            font-size: 0.9rem;
+            color: #f79da6;
+            font-weight: 600;
+        }
+
+        .cart-item-variant {
+            font-size: 0.8rem;
+            color: #999;
+        }
+
+        .btn-remove-item {
+            background: none;
+            border: none;
+            color: #ccc;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 5px;
+            transition: color 0.2s;
+        }
+
+        .btn-remove-item:hover {
+            color: #ff4757;
+        }
+
+        .cart-footer {
+            padding: 25px;
+            background: #fff;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            color: #333;
+            font-weight: 700;
+        }
+
+        .btn-checkout {
+            width: 100%;
+            padding: 15px;
+            background-color: #f79da6;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-checkout:hover {
+            background-color: #f8c3c8;
+        }
+
+        /* --- MOBILE RESPONSIVENESS --- */
+        @media (max-width: 768px) {
+            .brand-row {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 15px;
+            }
+
+            .brand-circle {
+                width: 130px;
+                height: 130px;
+                font-size: 0.9rem;
+            }
+
+            .brand-anua {
+                font-size: 1.4rem;
+            }
+
+            .brand-o {
+                font-size: 2.2rem;
+            }
+
+            .products-header {
+                font-size: 2.5rem;
+                margin-bottom: 30px;
+                text-align: center;
+            }
+
+            .products-section {
+                padding: 60px 15px;
+            }
+
+            .products-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 15px;
+            }
+
+            .product-card {
+                padding: 15px;
+                border-radius: 20px;
+            }
+
+            .product-name {
+                font-size: 1.1rem;
+            }
+
+            .product-price {
+                font-size: 1.1rem;
+            }
+
+            .btn-buy {
+                width: 100%;
+                padding: 10px 15px;
+                font-size: 1rem;
+            }
+
+            .cart-drawer {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .landing-logo {
+                width: 95%;
+                margin-top: -5vh;
+            }
+
+            .btn-entrer {
+                width: 130px;
+                height: 130px;
+                font-size: 1.4rem;
+                bottom: 30px;
+            }
+
+            .search-input {
+                font-size: 1.2rem;
+                padding: 15px;
+            }
+
+            .search-results-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .brand-circle {
+                width: 110px;
+                height: 110px;
+            }
+
+            .products-header {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- LANDING SCREEN -->
+    <div class="landing-screen">
+        <img src="logo.png" alt="AuraSkin Logo" class="landing-logo">
+        <button class="btn-entrer" id="entrerBtn">Entrer</button>
+    </div>
+
+    <!-- BRAND ROW PAGE -->
+    <section class="brand-section">
+        <div class="brand-row">
+            <a href="javascript:void(0)" class="brand-circle brand-cosrx" data-brand="COSRX">COSRX</a>
+            <a href="javascript:void(0)" class="brand-circle brand-mixsoon" data-brand="Mixsoon">mixsoon</a>
+            <a href="javascript:void(0)" class="brand-circle brand-glow" data-brand="Glow Recipe">GLOW RECIPE</a>
+            <a href="javascript:void(0)" class="brand-circle brand-skin1004" data-brand="SKIN 1004">
+                <img src="assets/brands/skin1004_logo.jpg" alt="SKIN1004" style="width: 85%; height: auto;">
+            </a>
+            <a href="javascript:void(0)" class="brand-circle brand-anua" data-brand="Anua">Anua</a>
+            <a href="javascript:void(0)" class="brand-circle brand-o" data-brand="O.">O.</a>
+        </div>
+    </section>
+
+    <!-- PRODUCTS SECTION -->
+    <section class="products-section" id="productsSection">
+        <h1 class="products-header" id="brandTitle">Brand Name</h1>
+        <div class="products-grid" id="productGrid">
+            <div class="product-card">[]</div>
+            <div class="product-card">[]</div>
+            <div class="product-card">[]</div>
+            <div class="product-card">[]</div>
+        </div>
+    </section>
+
+    <!-- SEARCH UI -->
+    <button class="search-btn-floating" id="searchBtn">🔍</button>
+
+    <div class="search-overlay" id="searchOverlay">
+        <button class="btn-close-search" id="closeSearchBtn">×</button>
+        <div class="search-input-container">
+            <input type="text" class="search-input" id="searchInput" placeholder="Search products...">
+        </div>
+        <div class="search-results-grid" id="searchResultsGrid">
+            <!-- Results injected here -->
+        </div>
+    </div>
+
+    <!-- CART UI -->
+    <button class="cart-btn-floating" id="cartBtn">
+        🛒 <span class="cart-count" id="cartCount">0</span>
+    </button>
+
+    <div class="cart-drawer" id="cartDrawer">
+        <div class="cart-header">
+            <h2 class="cart-title">Your Bag</h2>
+            <button class="btn-close-cart" id="closeCartBtn">×</button>
+        </div>
+        <div class="cart-items" id="cartItems">
+            <!-- Items will be injected here -->
+            <p style="text-align: center; color: #999; margin-top: 50px;">Your bag is empty.</p>
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total</span>
+                <span id="cartTotal">0.00dt</span>
+            </div>
+            <button class="btn-checkout">Checkout</button>
+        </div>
+    </div>
+
+    <script>
+        const btn = document.getElementById('entrerBtn');
+        const screen = document.querySelector('.landing-screen');
+        const circles = document.querySelectorAll('.brand-circle');
+        const productsSection = document.getElementById('productsSection');
+        const brandTitle = document.getElementById('brandTitle');
+        const productGrid = document.getElementById('productGrid');
+        const brandSection = document.querySelector('.brand-section');
+
+        const productsData = {
+            "COSRX": [
+                {
+                    name: "Advanced Snail 96 Mucin Power Essence",
+                    tagline: "Light-weight essence for a natural glow from the inside.",
+                    description: "Created from nutritious, low-stimulation filtered snail mucin to keep your skin moisturized and illuminated all day.",
+                    price: "87dt",
+                    originalPrice: "120dt",
+                    image: "assets/products/cosrx_snail_essence_1770468689697.png",
+                    sizes: []
+                },
+                {
+                    name: "Advanced Snail 92 All in one Cream",
+                    tagline: "An all-in-one solution cream that repairs and soothes irritated, sensitized skin after breakouts.",
+                    description: "A rich gel-type cream absorbs instantly into the skin with a full of nourishment while leaving your skin feeling fresh and comfortable.",
+                    price: "95dt",
+                    originalPrice: "134dt",
+                    image: "assets/products/cosrx_snail_cream.jpg",
+                    sizes: []
+                },
+                {
+                    name: "Acne Pimple Master Patch",
+                    tagline: "Quick acne healing overnight",
+                    description: "Hydrocolloid patches that protect wounded or troubled area from getting worse while maintaining humidity of skin to prevent further breakouts. (24 patches)",
+                    price: "29dt",
+                    originalPrice: "",
+                    image: "assets/products/cosrx_acne_patch.jpg",
+                    sizes: []
+                }
+            ],
+            "SKIN 1004": [
+                {
+                    name: "Centella Toning Toner",
+                    tagline: "A gentle PHA exfoliating toner that can be used daily to thoroughly improve skin texture.",
+                    description: "Product Benefits: Calming, Soothing, Mild exfoliating. Skin Type: Normal, Sensitive.",
+                    price: "66dt",
+                    originalPrice: "77dt",
+                    image: "assets/products/centella_toner.jpg",
+                    sizes: [
+                        { label: "210ml", price: "66dt", originalPrice: "77dt" },
+                        { label: "400ml", price: "105dt", originalPrice: "110dt" }
+                    ]
+                },
+                {
+                    name: "Hyalu-Cica Water-Fit Sun Serum UV",
+                    tagline: "A serum-like chemical sunscreen that is super lightweight, hydrating, and quickly absorbed.",
+                    description: "Product Benefits: Moisturizing, Soothing, UV Protection. Skin Type: Sensitive, Normal, Dry.",
+                    price: "81dt",
+                    originalPrice: "",
+                    image: "assets/products/skin1004_sun_serum.jpg",
+                    sizes: []
+                },
+                {
+                    name: "Centella Quick Calming Pad",
+                    tagline: "An essence-rich toner pad with Centella and Panthenol soothes and hydrates the skin in a simple 2-minute step.",
+                    description: "Product Benefits: Calming, Hydrating. Skin Type: Normal, Sensitive, Combination.",
+                    price: "70dt",
+                    originalPrice: "",
+                    image: "assets/products/skin1004_calming_pad.png",
+                    sizes: []
+                },
+                {
+                    name: "Centella Ampoule",
+                    tagline: "An all-rounder ampoule formulated to help soothe visible redness and comfort sensitive-looking skin.",
+                    description: "Product Benefits: Soothing, Calming. Skin Type: Sensitive, Normal.",
+                    price: "76dt",
+                    originalPrice: "93dt",
+                    image: "logo.png",
+                    sizes: []
+                }
+            ]
+        };
+
+
+        // --- SEARCH LOGIC ---
+        const searchBtn = document.getElementById('searchBtn');
+        const searchOverlay = document.getElementById('searchOverlay');
+        const closeSearchBtn = document.getElementById('closeSearchBtn');
+        const searchInput = document.getElementById('searchInput');
+        const searchResultsGrid = document.getElementById('searchResultsGrid');
+
+        let allProducts = [];
+
+        // Flatten products on load for easier searching
+        function initializeSearchIndex() {
+            allProducts = [];
+            Object.keys(productsData).forEach(brand => {
+                productsData[brand].forEach((product, index) => {
+                    allProducts.push({
+                        ...product,
+                        brand: brand,
+                        originalIndex: index // Keep track for addToCart
+                    });
+                });
+            });
+        }
+        initializeSearchIndex();
+
+        function toggleSearch() {
+            if (searchOverlay.classList.contains('open')) {
+                searchOverlay.classList.remove('open');
+                setTimeout(() => { searchOverlay.style.display = 'none'; }, 300);
+            } else {
+                searchOverlay.style.display = 'flex';
+                // Small delay to allow display flex to apply before opacity transition
+                setTimeout(() => {
+                    searchOverlay.classList.add('open');
+                    searchInput.focus();
+                }, 10);
+            }
+        }
+
+        if (searchBtn) searchBtn.addEventListener('click', toggleSearch);
+        if (closeSearchBtn) closeSearchBtn.addEventListener('click', toggleSearch);
+
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            if (query.length < 2) {
+                searchResultsGrid.innerHTML = '';
+                return;
+            }
+
+            const results = allProducts.filter(p =>
+                p.name.toLowerCase().includes(query) ||
+                p.tagline.toLowerCase().includes(query) ||
+                p.brand.toLowerCase().includes(query)
+            );
+            renderSearchResults(results);
+        });
+
+        function renderSearchResults(results) {
+            searchResultsGrid.innerHTML = '';
+            if (results.length === 0) {
+                searchResultsGrid.innerHTML = '<p style="color: #999; text-align: center; grid-column: 1/-1; font-size: 1.2rem;">No products found.</p>';
+                return;
+            }
+
+            results.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                // Force a simplified styling for search results if needed, but default is fine
+
+                // We need to re-create the size buttons logic or simplify it for search
+                // For simplicity in search, let's default to the first size price
+                // but still allow adding to cart.
+                // To fully support sizes in search details, we'd need the full logic.
+                // Let's copy the logic but use the 'product.originalIndex' and 'product.brand'
+
+                let sizeButtonsHtml = '';
+                if (product.sizes && product.sizes.length > 0) {
+                    sizeButtonsHtml = `<div class="size-selector">`;
+                    product.sizes.forEach((size, i) => {
+                        sizeButtonsHtml += `<button class="size-btn ${i === 0 ? 'active' : ''}" 
+                            data-brand="${product.brand}" 
+                            data-index="${product.originalIndex}" 
+                            data-size-index="${i}">${size.label}</button>`;
+                    });
+                    sizeButtonsHtml += `</div>`;
+                }
+
+                card.innerHTML = `
+                    <div class="product-image-container">
+                        <img src="${product.image}" alt="${product.name}" class="product-image" onerror="this.src='logo.png'">
+                    </div>
+                    <div class="product-info">
+                        <small style="color: #999; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px;">${product.brand}</small>
+                        <h3 class="product-name">${product.name}</h3>
+                        <p class="product-tagline" style="display:none;">${product.tagline}</p> <!-- Hide tagline in search for space? Or keep -->
+                        ${sizeButtonsHtml}
+                        <div class="product-price-container" id="search-price-${product.brand}-${product.originalIndex}">
+                            <span class="product-price">${product.price}</span>
+                            <span class="product-original-price">${product.originalPrice}</span>
+                        </div>
+                        <button class="btn-buy" id="search-buy-${product.brand}-${product.originalIndex}">Add to Cart</button>
+                    </div>
+                `;
+                searchResultsGrid.appendChild(card);
+
+                // Add to Cart Listener
+                const buyBtn = card.querySelector(`.btn-buy`);
+                buyBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    // Find active size
+                    let sizeIdx = null;
+                    const activeSizeBtn = card.querySelector('.size-btn.active');
+                    if (activeSizeBtn) {
+                        sizeIdx = parseInt(activeSizeBtn.getAttribute('data-size-index'));
+                    }
+                    addToCart(product.originalIndex, sizeIdx, product.brand);
+                });
+            });
+
+            // Size Button Listeners for Search
+            const sizeBtns = searchResultsGrid.querySelectorAll('.size-btn');
+            sizeBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const brand = e.target.getAttribute('data-brand');
+                    const originalIndex = e.target.getAttribute('data-index');
+                    const sizeIndex = e.target.getAttribute('data-size-index');
+
+                    // Find actual product object
+                    const p = productsData[brand][originalIndex];
+                    const selectedSize = p.sizes[sizeIndex];
+
+                    // Validations
+                    const container = e.target.parentElement;
+                    container.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+
+                    // Update Price in Search Card
+                    // note: ID logic needs to be unique if same product shows multiple times? Unlikely in search.
+                    // But to be safe, we used brand+index in ID.
+                    const priceContainer = document.getElementById(`search-price-${brand}-${originalIndex}`);
+                    if (priceContainer) {
+                        priceContainer.querySelector('.product-price').textContent = selectedSize.price;
+                        priceContainer.querySelector('.product-original-price').textContent = selectedSize.originalPrice;
+                    }
+                });
+            });
+        }
+
+        // --- SHOPPING CART LOGIC ---
+        let cart = [];
+        const cartDrawer = document.getElementById('cartDrawer');
+        const cartBtn = document.getElementById('cartBtn');
+        const closeCartBtn = document.getElementById('closeCartBtn');
+        const cartItemsContainer = document.getElementById('cartItems');
+        const cartCountEl = document.getElementById('cartCount');
+        const cartTotalEl = document.getElementById('cartTotal');
+
+        // Toggle Cart
+        function toggleCart() {
+            cartDrawer.classList.toggle('open');
+        }
+
+        if (cartBtn) cartBtn.addEventListener('click', toggleCart);
+        if (closeCartBtn) closeCartBtn.addEventListener('click', toggleCart);
+
+        // Add to Cart
+        function addToCart(productIndex, sizeIndex, brand) {
+            const product = productsData[brand][productIndex];
+            let selectedPrice = product.price;
+            let selectedSizeLabel = "";
+
+            if (sizeIndex !== null && product.sizes && product.sizes.length > 0) {
+                const size = product.sizes[sizeIndex];
+                selectedPrice = size.price;
+                selectedSizeLabel = size.label;
+            }
+
+            // Create Cart Item
+            const cartItem = {
+                name: product.name,
+                image: product.image,
+                price: selectedPrice,
+                variant: selectedSizeLabel,
+                id: Date.now() // Simple unique ID
+            };
+
+            cart.push(cartItem);
+            updateCartUI();
+
+            // Open cart to show confirmation
+            if (!cartDrawer.classList.contains('open')) {
+                toggleCart();
+            }
+        }
+
+        // Remove from Cart
+        window.removeFromCart = function (id) {
+            cart = cart.filter(item => item.id !== id);
+            updateCartUI();
+        }
+
+        // Update UI
+        function updateCartUI() {
+            cartCountEl.textContent = cart.length;
+            cartItemsContainer.innerHTML = '';
+            let total = 0;
+
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = '<p style="text-align: center; color: #999; margin-top: 50px;">Your bag is empty.</p>';
+            } else {
+                cart.forEach(item => {
+                    const priceVal = parseFloat(item.price.replace('dt', ''));
+                    if (!isNaN(priceVal)) total += priceVal;
+
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'cart-item';
+                    itemEl.innerHTML = `
+                        <img src="${item.image}" alt="${item.name}" class="cart-item-img">
+                        <div class="cart-item-info">
+                            <h4 class="cart-item-name">${item.name}</h4>
+                            ${item.variant ? `<span class="cart-item-variant">Size: ${item.variant}</span>` : ''}
+                            <div class="cart-item-price">${item.price}</div>
+                        </div>
+                        <button class="btn-remove-item" onclick="removeFromCart(${item.id})">×</button>
+                    `;
+                    cartItemsContainer.appendChild(itemEl);
+                });
+            }
+
+            cartTotalEl.textContent = total.toFixed(2) + 'dt';
+        }
+
+        function renderProducts(brand) {
+            productGrid.innerHTML = '';
+            const products = productsData[brand] || [];
+
+            if (products.length === 0) {
+                productGrid.innerHTML = '<p style="color:white; font-size: 1.2rem; grid-column: 1/-1; text-align: center;">No products found for this brand yet.</p>';
+                return;
+            }
+
+            products.forEach((product, index) => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+
+                let sizeButtonsHtml = '';
+                if (product.sizes && product.sizes.length > 0) {
+                    sizeButtonsHtml = `<div class="size-selector">`;
+                    product.sizes.forEach((size, i) => {
+                        sizeButtonsHtml += `<button class="size-btn ${i === 0 ? 'active' : ''}" data-index="${index}" data-size-index="${i}">${size.label}</button>`;
+                    });
+                    sizeButtonsHtml += `</div>`;
+                }
+
+                card.innerHTML = `
+                    <div class="product-image-container">
+                        <img src="${product.image}" alt="${product.name}" class="product-image" onerror="this.src='logo.png'">
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name">${product.name}</h3>
+                        <p class="product-tagline">${product.tagline}</p>
+                        ${sizeButtonsHtml}
+                        <div class="product-price-container" id="price-container-${index}">
+                            <span class="product-price">${product.price}</span>
+                            <span class="product-original-price">${product.originalPrice}</span>
+                        </div>
+                        <button class="btn-buy" id="buy-btn-${index}">Add to Cart</button>
+                    </div>
+                `;
+                productGrid.appendChild(card);
+
+                const buyBtn = card.querySelector(`#buy-btn-${index}`);
+                buyBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    let sizeIdx = null;
+                    const activeSizeBtn = card.querySelector('.size-btn.active');
+                    if (activeSizeBtn) {
+                        sizeIdx = parseInt(activeSizeBtn.getAttribute('data-size-index'));
+                    }
+                    addToCart(index, sizeIdx, brand);
+                });
+            });
+
+            const sizeBtns = productGrid.querySelectorAll('.size-btn');
+            sizeBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const productIndex = parseInt(e.target.getAttribute('data-index'));
+                    const sizeIndex = parseInt(e.target.getAttribute('data-size-index'));
+                    const product = products[productIndex];
+                    const selectedSize = product.sizes[sizeIndex];
+
+                    const container = e.target.parentElement;
+                    container.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+
+                    const priceContainer = document.getElementById(`price-container-${productIndex}`);
+                    priceContainer.querySelector('.product-price').textContent = selectedSize.price;
+                    priceContainer.querySelector('.product-original-price').textContent = selectedSize.originalPrice;
+                });
+            });
+        }
+
+        function handleRouting() {
+            const hash = window.location.hash;
+
+            if (hash === '' || hash === '#landing') {
+                showLanding();
+            } else if (hash === '#brands') {
+                showBrands();
+            } else if (hash.startsWith('#products=')) {
+                const brandName = decodeURIComponent(hash.split('=')[1]);
+                showProducts(brandName);
+            }
+        }
+
+        function showLanding() {
+            screen.style.display = 'flex';
+            screen.classList.remove('hidden');
+            btn.classList.remove('expanding');
+            productsSection.classList.remove('visible');
+            productsSection.style.display = 'none';
+            circles.forEach(c => c.classList.remove('revealed'));
+            brandSection.style.display = 'flex';
+        }
+
+        function showBrands() {
+            if (!screen.classList.contains('hidden')) {
+                btn.classList.add('expanding');
+                setTimeout(() => {
+                    screen.classList.add('hidden');
+                    document.body.style.overflow = 'auto';
+                    revealCircles();
+                    setTimeout(() => { screen.style.display = 'none'; }, 800);
+                }, 800);
+            } else {
+                productsSection.classList.remove('visible');
+                brandTitle.classList.remove('revealed');
+                productGrid.classList.remove('revealed');
+                setTimeout(() => {
+                    productsSection.style.display = 'none';
+                    brandSection.style.display = 'flex';
+                    document.body.style.backgroundColor = '#f8c3c8';
+                    revealCircles();
+                }, 800);
+            }
+        }
+
+        function revealCircles() {
+            circles.forEach((circle) => {
+                circle.classList.add('revealed');
+                circle.style.display = 'flex';
+                circle.classList.remove('expanding');
+            });
+        }
+
+        function showProducts(brandName) {
+            screen.classList.add('hidden');
+            screen.style.display = 'none';
+
+            brandTitle.textContent = brandName;
+            renderProducts(brandName);
+
+            const circle = Array.from(circles).find(c => c.getAttribute('data-brand') === brandName);
+            if (circle) {
+                const bgColor = window.getComputedStyle(circle).backgroundColor;
+                document.body.style.backgroundColor = bgColor;
+
+                const lightBrands = ["SKIN 1004", "Mixsoon", "Anua", "O."];
+                if (lightBrands.includes(brandName)) {
+                    productsSection.classList.add('light-theme');
+                } else {
+                    productsSection.classList.remove('light-theme');
+                }
+            }
+
+            brandSection.style.display = 'none';
+            productsSection.style.display = 'flex';
+
+            setTimeout(() => {
+                productsSection.classList.add('visible');
+                brandTitle.classList.add('revealed');
+                productGrid.classList.add('revealed');
+            }, 100);
+        }
+
+        btn.addEventListener('click', () => {
+            window.location.hash = 'brands';
+        });
+
+        circles.forEach(circle => {
+            circle.addEventListener('click', (e) => {
+                const brandName = circle.getAttribute('data-brand');
+                window.location.hash = `products=${encodeURIComponent(brandName)}`;
+            });
+        });
+
+        window.addEventListener('hashchange', handleRouting);
+        window.addEventListener('load', handleRouting);
+
+    </script>
+</body>
+
+</html>
