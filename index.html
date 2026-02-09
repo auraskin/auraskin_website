@@ -231,7 +231,7 @@
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
-            border-radius: 30px;
+            border-radius: 50px;
             padding: 30px;
             display: flex;
             flex-direction: column;
@@ -254,7 +254,7 @@
             aspect-ratio: 1/1;
             /* Keep it square */
             margin-bottom: 25px;
-            border-radius: 20px;
+            border-radius: 40px;
             overflow: hidden;
             background: transparent;
             /* Removed white background */
@@ -324,7 +324,7 @@
         .btn-buy {
             margin-top: 20px;
             padding: 12px 32px;
-            border-radius: 40px;
+            border-radius: 50px;
             border: none;
             background-color: #f8c3c8;
             color: #8b4a50;
@@ -388,10 +388,9 @@
         .brand-anua {
             background-color: #fff;
             color: #000;
-            font-family: 'Montserrat', sans-serif;
-            font-size: 1.8rem;
-            font-weight: 600;
-            letter-spacing: -1px;
+            padding: 0;
+            overflow: hidden;
+            border: 1px solid #eee !important;
         }
 
         .brand-o {
@@ -825,7 +824,13 @@
             <a href="javascript:void(0)" class="brand-circle brand-skin1004" data-brand="SKIN 1004">
                 <img src="assets/brands/skin1004_logo.jpg" alt="SKIN1004" style="width: 85%; height: auto;">
             </a>
-            <a href="javascript:void(0)" class="brand-circle brand-anua" data-brand="Anua">Anua</a>
+            <a href="javascript:void(0)" class="brand-circle brand-anua" data-brand="Anua">
+                <img src="assets/brands/anua_logo.png" alt="Anua"
+                    style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+            </a>
+            <a href="javascript:void(0)" class="brand-circle brand-althea" data-brand="Dr. Althea">
+                <img src="assets/brands/dr_althea_logo.webp" alt="Dr. Althea" style="width: 85%; height: auto;">
+            </a>
             <a href="javascript:void(0)" class="brand-circle brand-o" data-brand="The Ordinary">O.</a>
         </div>
     </section>
@@ -1002,6 +1007,35 @@
                     sizes: []
                 }
             ],
+            "Mixsoon": [
+                {
+                    name: "Bean Essence",
+                    tagline: "A multi-tasking essence that helps to strengthen and hydrate skin while providing gentle exfoliation.",
+                    description: "Formulated with fermented bean, barley, pomegranate, and pear to texture skin and improve vitality.",
+                    price: "117dt",
+                    originalPrice: "167dt",
+                    image: "assets/products/beanessencebestseller.webp",
+                    sizes: []
+                },
+                {
+                    name: "Bean Cream",
+                    tagline: "A rich, nourishing cream that helps to strengthen the skin barrier and provide deep hydration.",
+                    description: "Enriched with fermented bean extract for a smooth, glowing complexion without stickiness.",
+                    price: "117dt",
+                    originalPrice: "167dt",
+                    image: "assets/products/MX_1x1_beancream-background.webp",
+                    sizes: []
+                },
+                {
+                    name: "Glacier Water Hyaluronic Acid Serum",
+                    tagline: "A deep hydrating serum with glacier water and 3 types of hyaluronic acid.",
+                    description: "Provides instant moisture and forms a protective hydration film on the skin.",
+                    price: "134dt",
+                    originalPrice: "182dt",
+                    image: "assets/products/300ml___1_4d05e0a2-ad7d-4dff-a7fb-9941b7393b23.webp",
+                    sizes: []
+                }
+            ],
             "Anua": [
                 {
                     name: "Heartleaf Quercetinol Pore Deep Cleansing Foam",
@@ -1019,6 +1053,46 @@
                     price: "80dt",
                     originalPrice: "96dt",
                     image: "assets/products/anua-us-cleanser-200ml-heartleaf-pore-control-cleansing-oil-1161173148.webp",
+                    sizes: []
+                }
+            ],
+            "Dr. Althea": [
+                {
+                    name: "345 Relief Cream",
+                    tagline: "A lightweight regenerating ointment-gel cream for post-acne skin.",
+                    description: "Enriched with Niacinamide, Panthenol, and Centella Asiatica for soothing and skin barrier repair.",
+                    price: "110dt",
+                    originalPrice: "135dt",
+                    image: "assets/products/345cream.webp",
+                    sizes: []
+                }
+            ],
+            "Glow Recipe": [
+                {
+                    name: "Watermelon Glow Niacinamide Dew Drops",
+                    tagline: "A multi-use highlighting serum that hydrates and visibly reduces the look of hyperpigmentation for a dewy glow.",
+                    description: "Clinically effective for a natural, healthy-looking glow without mica, glitter, or gray cast.",
+                    price: "167dt",
+                    originalPrice: "",
+                    image: "assets/products/10_21_2410_21_24_WM_DEWDROPS-_1.webp",
+                    sizes: []
+                },
+                {
+                    name: "Watermelon Glow PHA + BHA Pore-Tight Toner",
+                    tagline: "A PHA- and BHA-infused watermelon toner that hydrates skin and minimizes the appearance of pores.",
+                    description: "Balance, hydrate, and achieve ultra-smooth skin with this gentle, bouncy toner.",
+                    price: "172dt",
+                    originalPrice: "",
+                    image: "assets/products/PDP_IMAGES_Watermelon-Glow-PHA_BHA-Pore-Tight-Toner-5_8726c95e-05a9-4c53-af63-80a8b9926ae7.webp",
+                    sizes: []
+                },
+                {
+                    name: "Plum Plump Hyaluronic Cream",
+                    tagline: "A whipped-gel cream moisturizer that hydrates and visibly plumps skin with polyglutamic acid and multi-weight hyaluronic acid.",
+                    description: "Gives skin a dewy, bouncy look while supporting the skin barrier.",
+                    price: "191dt",
+                    originalPrice: "",
+                    image: "assets/products/NEW5_14_24_PDP_CLAIM_REFRESH_PLUM_CREAM-01.webp",
                     sizes: []
                 }
             ],
@@ -1081,6 +1155,15 @@
                     price: "44dt",
                     originalPrice: "",
                     image: "assets/products/rdn-caffeine-solution-5pct-egcg-30ml.webp",
+                    sizes: []
+                },
+                {
+                    name: "UV Filters SPF 45 Serum",
+                    tagline: "A lightweight, invisible sunscreen serum.",
+                    description: "Broad spectrum protection with antioxidants. Provides high protection against UVA and UVB rays while maintaining a serum-like finish.",
+                    price: "91dt",
+                    originalPrice: "",
+                    image: "assets/products/ord-uv-filters-spf-45-serum-usa-60ml.webp",
                     sizes: []
                 }
             ]
@@ -1455,7 +1538,7 @@
                 const bgColor = window.getComputedStyle(circle).backgroundColor;
                 document.body.style.backgroundColor = bgColor;
 
-                const lightBrands = ["SKIN 1004", "Mixsoon", "Anua", "The Ordinary"];
+                const lightBrands = ["SKIN 1004", "Mixsoon", "Anua", "The Ordinary", "Dr. Althea", "Glow Recipe"];
                 if (lightBrands.includes(brandName)) {
                     productsSection.classList.add('light-theme');
                 } else {
