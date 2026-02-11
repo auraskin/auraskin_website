@@ -207,7 +207,7 @@
         const SUPABASE_KEY = 'sb_publishable_8r46Ru1eCBhchCdhzM3hsg_TC_5vZz3';
         const ADMIN_PASSWORD = 'aura_admin_2024'; // Change this to your desired secret password
 
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         function checkPassword() {
             const pass = document.getElementById('adminPassword').value;
@@ -235,7 +235,7 @@
         }
 
         async function fetchOrders() {
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('orders')
                 .select('*')
                 .order('created_at', { ascending: false });
@@ -250,7 +250,7 @@
         }
 
         function setupRealtime() {
-            supabase
+            supabaseClient
                 .channel('orders_channel')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
                     fetchOrders(); // Refresh everything on any change
@@ -299,7 +299,7 @@
         }
 
         async function updateStatus(id, newStatus) {
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('orders')
                 .update({ status: newStatus })
                 .eq('id', id);
