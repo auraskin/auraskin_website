@@ -1056,11 +1056,11 @@
             <form class="checkout-form" id="checkoutForm">
                 <div class="form-group">
                     <label for="fullName">Nom et Prénom</label>
-                    <input type="text" id="fullName" placeholder="Ahmed Ben Ali" required>
+                    <input type="text" id="fullName" placeholder="" required>
                 </div>
                 <div class="form-group">
                     <label for="phone">Téléphone</label>
-                    <input type="tel" id="phone" placeholder="55 123 456" required>
+                    <input type="tel" id="phone" placeholder="" required>
                 </div>
                 <div class="form-group">
                     <label for="city">Ville</label>
@@ -1094,7 +1094,7 @@
                 </div>
                 <div class="form-group">
                     <label for="address">Adresse Complète</label>
-                    <textarea id="address" rows="2" placeholder="Rue 123, Immeuble X..." required></textarea>
+                    <textarea id="address" rows="2" placeholder="" required></textarea>
                 </div>
 
                 <div class="checkout-summary">
@@ -1821,7 +1821,8 @@
         const closeCheckoutBtn = document.getElementById('closeCheckoutBtn');
         const summarySubtotal = document.getElementById('summarySubtotal');
         const summaryTotal = document.getElementById('summaryTotal');
-        const shippingFee = 7.00; // Fixed delivery fee for Tunisia
+        const summaryShipping = document.getElementById('shippingFee'); // The span in HTML
+        const baseShippingFee = 7.00; // Fixed delivery fee for Tunisia
 
         // --- SUPABASE CONFIGURATION ---
         const SUPABASE_URL = 'https://tthnppyrrjfbmfjnfqnq.supabase.co';
@@ -1842,7 +1843,10 @@
             });
 
             summarySubtotal.textContent = subtotal.toFixed(2) + 'dt';
-            summaryTotal.textContent = (subtotal + shippingFee).toFixed(2) + 'dt';
+
+            const activeShippingFee = subtotal >= 100 ? 0 : baseShippingFee;
+            summaryShipping.textContent = activeShippingFee === 0 ? 'Gratuit' : activeShippingFee.toFixed(2) + 'dt';
+            summaryTotal.textContent = (subtotal + activeShippingFee).toFixed(2) + 'dt';
 
             // Close cart and open checkout
             toggleCart();
