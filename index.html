@@ -9,6 +9,8 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Cormorant+Garamond:wght@700&display=swap"
         rel="stylesheet">
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --target-pink: #f8c3c8;
@@ -710,6 +712,167 @@
             background-color: #f8c3c8;
         }
 
+        /* --- CHECKOUT MODAL --- */
+        .checkout-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            z-index: 6000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .checkout-overlay.open {
+            display: flex;
+            opacity: 1;
+        }
+
+        .checkout-modal {
+            background: #fff;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 40px;
+            padding: 40px;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+            transform: translateY(30px);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .checkout-overlay.open .checkout-modal {
+            transform: translateY(0);
+        }
+
+        .btn-close-checkout {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            font-size: 1.8rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.3s ease;
+        }
+
+        .btn-close-checkout:hover {
+            color: #333;
+        }
+
+        .checkout-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .checkout-header h2 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .checkout-header p {
+            color: #777;
+            font-size: 0.9rem;
+        }
+
+        .checkout-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding-left: 5px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 15px 20px;
+            border-radius: 20px;
+            border: 1px solid #eee;
+            background: #f9f9f9;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #f79da6;
+            background: #fff;
+            box-shadow: 0 5px 15px rgba(247, 157, 166, 0.1);
+        }
+
+        .checkout-summary {
+            margin-top: 10px;
+            padding: 20px;
+            background: #fff5f6;
+            border-radius: 25px;
+            border: 1px dashed #f79da6;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+            color: #555;
+        }
+
+        .summary-row.total {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(247, 157, 166, 0.3);
+            font-weight: 700;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .btn-confirm-order {
+            margin-top: 10px;
+            padding: 18px;
+            border-radius: 25px;
+            border: none;
+            background: #f79da6;
+            color: #fff;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(247, 157, 166, 0.2);
+        }
+
+        .btn-confirm-order:hover {
+            background: #8b4a50;
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(139, 74, 80, 0.3);
+        }
+
         /* --- MOBILE RESPONSIVENESS --- */
         @media (max-width: 768px) {
             .brand-row {
@@ -864,6 +1027,7 @@
         🛒 <span class="cart-count" id="cartCount">0</span>
     </button>
 
+    <!-- CART DRAWER -->
     <div class="cart-drawer" id="cartDrawer">
         <div class="cart-header">
             <h2 class="cart-title">Your Bag</h2>
@@ -879,6 +1043,77 @@
                 <span id="cartTotal">0.00dt</span>
             </div>
             <button class="btn-checkout">Checkout</button>
+        </div>
+    </div>
+
+    <div class="checkout-overlay" id="checkoutOverlay">
+        <div class="checkout-modal">
+            <button class="btn-close-checkout" id="closeCheckoutBtn">×</button>
+            <div class="checkout-header">
+                <h2>Votre Commande</h2>
+                <p>Veuillez remplir vos informations pour valider l'achat.</p>
+            </div>
+            <form class="checkout-form" id="checkoutForm">
+                <div class="form-group">
+                    <label for="fullName">Nom et Prénom</label>
+                    <input type="text" id="fullName" placeholder="Ex: Ahmed Ben Ali" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone">Téléphone</label>
+                    <input type="tel" id="phone" placeholder="Ex: 55 123 456" required>
+                </div>
+                <div class="form-group">
+                    <label for="city">Ville</label>
+                    <select id="city" required>
+                        <option value="" disabled selected>Choisir votre ville</option>
+                        <option value="Ariana">Ariana</option>
+                        <option value="Beja">Beja</option>
+                        <option value="Ben Arous">Ben Arous</option>
+                        <option value="Bizerte">Bizerte</option>
+                        <option value="Gabes">Gabes</option>
+                        <option value="Gafsa">Gafsa</option>
+                        <option value="Jendouba">Jendouba</option>
+                        <option value="Kairouan">Kairouan</option>
+                        <option value="Kasserine">Kasserine</option>
+                        <option value="Kebili">Kebili</option>
+                        <option value="Kef">Kef</option>
+                        <option value="Mahdia">Mahdia</option>
+                        <option value="Manouba">Manouba</option>
+                        <option value="Medenine">Medenine</option>
+                        <option value="Monastir">Monastir</option>
+                        <option value="Nabeul">Nabeul</option>
+                        <option value="Sfax">Sfax</option>
+                        <option value="Sidi Bouzid">Sidi Bouzid</option>
+                        <option value="Siliana">Siliana</option>
+                        <option value="Sousse">Sousse</option>
+                        <option value="Tataouine">Tataouine</option>
+                        <option value="Tozeur">Tozeur</option>
+                        <option value="Tunis">Tunis</option>
+                        <option value="Zaghouan">Zaghouan</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="address">Adresse Complète</label>
+                    <textarea id="address" rows="2" placeholder="Ex: Rue 123, Immeuble X..." required></textarea>
+                </div>
+
+                <div class="checkout-summary">
+                    <div class="summary-row">
+                        <span>Sous-total</span>
+                        <span id="summarySubtotal">0.00dt</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Livraison</span>
+                        <span id="shippingFee">7.00dt</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total à payer</span>
+                        <span id="summaryTotal">0.00dt</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-confirm-order">Valider la commande</button>
+            </form>
         </div>
     </div>
 
@@ -1578,6 +1813,110 @@
 
         window.addEventListener('hashchange', handleRouting);
         window.addEventListener('load', handleRouting);
+
+        // --- CHECKOUT LOGIC ---
+        const checkoutOverlay = document.getElementById('checkoutOverlay');
+        const checkoutForm = document.getElementById('checkoutForm');
+        const checkoutBtn = document.querySelector('.btn-checkout');
+        const closeCheckoutBtn = document.getElementById('closeCheckoutBtn');
+        const summarySubtotal = document.getElementById('summarySubtotal');
+        const summaryTotal = document.getElementById('summaryTotal');
+        const shippingFee = 7.00; // Fixed delivery fee for Tunisia
+
+        // --- SUPABASE CONFIGURATION ---
+        const SUPABASE_URL = 'https://tthnppyrrjfbmfjnfqnq.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_8r46Ru1eCBhchCdhzM3hsg_TC_5vZz3';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        function openCheckout() {
+            if (cart.length === 0) {
+                alert("Votre panier est vide!");
+                return;
+            }
+
+            // Calculate Totals
+            let subtotal = 0;
+            cart.forEach(item => {
+                const priceVal = parseFloat(item.price.replace('dt', ''));
+                if (!isNaN(priceVal)) subtotal += priceVal;
+            });
+
+            summarySubtotal.textContent = subtotal.toFixed(2) + 'dt';
+            summaryTotal.textContent = (subtotal + shippingFee).toFixed(2) + 'dt';
+
+            // Close cart and open checkout
+            toggleCart();
+            checkoutOverlay.classList.add('open');
+            document.body.style.overflow = 'hidden'; // Prevent scrolling
+        }
+
+        function closeCheckout() {
+            checkoutOverlay.classList.remove('open');
+            document.body.style.overflow = 'auto';
+        }
+
+        if (checkoutBtn) checkoutBtn.addEventListener('click', openCheckout);
+        if (closeCheckoutBtn) closeCheckoutBtn.addEventListener('click', closeCheckout);
+
+        checkoutForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const submitBtn = checkoutForm.querySelector('.btn-confirm-order');
+            submitBtn.textContent = 'Envoi en cours...';
+            submitBtn.disabled = true;
+
+            const name = document.getElementById('fullName').value;
+            const phone = document.getElementById('phone').value;
+            const city = document.getElementById('city').value;
+            const address = document.getElementById('address').value;
+            const total = summaryTotal.textContent;
+
+            try {
+                const { error } = await supabaseClient
+                    .from('orders')
+                    .insert([
+                        {
+                            customer_name: name,
+                            customer_phone: phone,
+                            customer_city: city,
+                            customer_address: address,
+                            items: cart,
+                            total_price: total
+                        }
+                    ]);
+
+                if (error) throw error;
+
+                // Success State UI
+                const modalBody = document.querySelector('.checkout-modal');
+                const originalContent = modalBody.innerHTML;
+
+                modalBody.innerHTML = `
+                    <div style="text-align: center; padding: 40px 0;">
+                        <div style="font-size: 4rem; margin-bottom: 20px;">✅</div>
+                        <h2 style="font-family: 'Montserrat', sans-serif; color: #333; margin-bottom: 10px;">Commande Reçue !</h2>
+                        <p style="color: #666; margin-bottom: 30px;">Merci ${name}, nous traiterons votre commande très bientôt.</p>
+                        <button class="btn-confirm-order" id="closeSuccessBtn" style="width: auto; padding: 15px 40px;">Fermer</button>
+                    </div>
+                `;
+
+                document.getElementById('closeSuccessBtn').addEventListener('click', () => {
+                    closeCheckout();
+                    // Reset modal content for next time (optional, as page might reload or cart clears)
+                    setTimeout(() => { modalBody.innerHTML = originalContent; }, 500);
+                });
+
+                // Clear cart
+                cart = [];
+                updateCartUI();
+
+            } catch (err) {
+                console.error("Error submitting order:", err);
+                alert("Erreur lors de l'envoi. Veuillez réessayer ou nous contacter sur WhatsApp.");
+                submitBtn.textContent = 'Valider la commande';
+                submitBtn.disabled = false;
+            }
+        });
 
     </script>
 </body>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraSkin Manager | Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest-admin.json">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary: #f79da6;
+            --secondary: #8b4a50;
+            --bg: #fdf2f3;
+            --text: #333;
+            --card-bg: #fff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            color: var(--secondary);
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 25px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 0.8rem;
+            color: #999;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .stat-card p {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .order-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .order-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            border-left: 8px solid var(--primary);
+            transition: transform 0.2s;
+        }
+
+        .order-card:active {
+            transform: scale(0.98);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .order-status {
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            background: #eee;
+        }
+
+        .status-nouveau {
+            background: #fdf2f3;
+            color: var(--secondary);
+        }
+
+        .status-expédié {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .customer-info h4 {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .customer-info p {
+            font-size: 0.9rem;
+            color: #777;
+            margin-bottom: 10px;
+        }
+
+        .order-footer {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .order-total {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--secondary);
+        }
+
+        .btn-status {
+            padding: 8px 15px;
+            border-radius: 50px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Mobile Fix */
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loginScreen"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px;">
+        <h1 style="color: var(--secondary); margin-bottom: 30px;">AuraSkin Admin</h1>
+        <div
+            style="background: #fff; padding: 40px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); width: 100%; max-width: 400px; text-align: center;">
+            <p style="margin-bottom: 20px; color: #666;">Entrez votre mot de passe secret</p>
+            <input type="password" id="adminPassword"
+                style="width: 100%; padding: 15px; border-radius: 20px; border: 1px solid #eee; margin-bottom: 20px; text-align: center; font-size: 1.2rem;">
+            <button onclick="checkPassword()"
+                style="width: 100%; padding: 15px; border-radius: 20px; border: none; background: var(--primary); color: #fff; font-weight: 700; cursor: pointer;">Se
+                connecter</button>
+        </div>
+    </div>
+
+    <div class="header">
+        <h1>AuraSkin Manager</h1>
+        <div id="connectionStatus" style="font-size: 0.7rem; color: #999;">Connecté 🟢</div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Nouveaux</h3>
+            <p id="todayCount">0</p>
+        </div>
+        <div class="stat-card">
+            <h3>Total Ventes</h3>
+            <p id="totalRevenue">0 dt</p>
+        </div>
+    </div>
+
+    <div class="order-list" id="orderList">
+        <p style="text-align: center; color: #999; margin-top: 50px;">Chargement des commandes...</p>
+    </div>
+
+    <script>
+        // --- SUPABASE CONFIGURATION ---
+        const SUPABASE_URL = 'https://tthnppyrrjfbmfjnfqnq.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_8r46Ru1eCBhchCdhzM3hsg_TC_5vZz3';
+        const ADMIN_PASSWORD = 'aura_admin_2024'; // Change this to your desired secret password
+
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        function checkPassword() {
+            const pass = document.getElementById('adminPassword').value;
+            if (pass === ADMIN_PASSWORD) {
+                document.getElementById('loginScreen').style.display = 'none';
+                localStorage.setItem('admin_auth', 'true');
+                init();
+            } else {
+                alert("Mot de passe incorrect");
+            }
+        }
+
+        // Auto-login if previously authenticated
+        if (localStorage.getItem('admin_auth') === 'true') {
+            document.getElementById('loginScreen').style.display = 'none';
+            init();
+        }
+
+        async function init() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw-admin.js');
+            }
+            fetchOrders();
+            setupRealtime();
+        }
+
+        async function fetchOrders() {
+            const { data, error } = await supabase
+                .from('orders')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error("Error fetching orders:", error);
+                return;
+            }
+
+            renderOrders(data);
+            updateStats(data);
+        }
+
+        function setupRealtime() {
+            supabase
+                .channel('orders_channel')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
+                    fetchOrders(); // Refresh everything on any change
+                })
+                .subscribe();
+        }
+
+        function renderOrders(orders) {
+            const list = document.getElementById('orderList');
+            if (orders.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: #999; margin-top: 50px;">Aucune commande trouvée.</p>';
+                return;
+            }
+
+            list.innerHTML = orders.map(order => {
+                const date = new Date(order.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                const statusClass = order.status === 'Nouveau' ? 'status-nouveau' : (order.status === 'Expédié' ? 'status-expédié' : '');
+
+                return `
+                    <div class="order-card">
+                        <div class="order-header">
+                            <span class="order-status ${statusClass}">${order.status}</span>
+                            <span style="font-size: 0.8rem; color: #999;">${date} | ${new Date(order.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <div class="customer-info">
+                            <h4>${order.customer_name}</h4>
+                            <p>📍 ${order.customer_city}, ${order.customer_address}</p>
+                            <p>📞 <a href="tel:${order.customer_phone}" style="color: var(--secondary); text-decoration: none;">${order.customer_phone}</a></p>
+                            <div style="margin-top: 10px; font-size: 0.85rem; color: #555; background: #fafafa; padding: 10px; border-radius: 10px;">
+                                <strong>Articles :</strong><br>
+                                ${order.items.map(item => `- ${item.name} (${item.variant})`).join('<br>')}
+                            </div>
+                        </div>
+                        <div class="order-footer">
+                            <span class="order-total">${order.total_price}</span>
+                            <select onchange="updateStatus('${order.id}', this.value)" class="btn-status" style="background: #fff; color: #333; border: 1px solid #ddd;">
+                                <option value="Nouveau" ${order.status === 'Nouveau' ? 'selected' : ''}>Nouveau</option>
+                                <option value="En cours" ${order.status === 'En cours' ? 'selected' : ''}>En cours</option>
+                                <option value="Expédié" ${order.status === 'Expédié' ? 'selected' : ''}>Expédié</option>
+                                <option value="Annulé" ${order.status === 'Annulé' ? 'selected' : ''}>Annulé</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function updateStatus(id, newStatus) {
+            const { error } = await supabase
+                .from('orders')
+                .update({ status: newStatus })
+                .eq('id', id);
+
+            if (error) {
+                alert("Erreur lors de la mise à jour");
+                console.error(error);
+            }
+        }
+
+        function updateStats(orders) {
+            const nouveaux = orders.filter(o => o.status === 'Nouveau').length;
+            document.getElementById('todayCount').textContent = nouveaux;
+
+            const total = orders
+                .filter(o => o.status !== 'Annulé')
+                .reduce((sum, o) => sum + parseFloat(o.total_price.replace('dt', '')), 0);
+
+            document.getElementById('totalRevenue').textContent = total.toFixed(2) + ' dt';
+        }
+    </script>
+</body>
+
+</html>
