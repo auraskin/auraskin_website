@@ -827,6 +827,56 @@
             box-shadow: 0 5px 15px rgba(247, 157, 166, 0.1);
         }
 
+        .promo-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .promo-group input {
+            flex: 1;
+            padding: 12px 15px;
+            border-radius: 12px;
+            border: 1px solid #eee;
+            background: #f9f9f9;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.9rem;
+        }
+
+        .btn-apply-promo {
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: none;
+            background: #333;
+            color: #fff;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-apply-promo:hover {
+            background: #000;
+        }
+
+        .promo-message {
+            font-size: 0.8rem;
+            margin-top: -15px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .promo-message.success {
+            color: #4CAF50;
+            display: block;
+        }
+
+        .promo-message.error {
+            color: #f44336;
+            display: block;
+        }
+
         .checkout-summary {
             margin-top: 10px;
             padding: 20px;
@@ -1096,6 +1146,15 @@
                     <label for="address">Adresse Complète</label>
                     <textarea id="address" rows="2" placeholder="" required></textarea>
                 </div>
+
+                <div class="form-group" style="margin-bottom: 5px;">
+                    <label for="promoCode">Code Promo</label>
+                    <div class="promo-group">
+                        <input type="text" id="promoCode" placeholder="Entrez votre code">
+                        <button type="button" class="btn-apply-promo" id="applyPromoBtn">Appliquer</button>
+                    </div>
+                </div>
+                <div id="promoMessage" class="promo-message"></div>
 
                 <div class="checkout-summary">
                     <div class="summary-row">
@@ -1821,8 +1880,9 @@
         const closeCheckoutBtn = document.getElementById('closeCheckoutBtn');
         const summarySubtotal = document.getElementById('summarySubtotal');
         const summaryTotal = document.getElementById('summaryTotal');
-        const summaryShipping = document.getElementById('shippingFee'); // The span in HTML
-        const baseShippingFee = 7.00; // Fixed delivery fee for Tunisia
+        const summaryShipping = document.getElementById('shippingFee');
+        const baseShippingFee = 7.00;
+        let currentDiscount = 0; // Discount percentage (0.1 for 10%)
 
         // --- SUPABASE CONFIGURATION ---
         const SUPABASE_URL = 'https://tthnppyrrjfbmfjnfqnq.supabase.co';
@@ -1834,8 +1894,13 @@
                 alert("Votre panier est vide!");
                 return;
             }
+            updateCheckoutSummary();
+            toggleCart();
+            checkoutOverlay.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
 
-            // Calculate Totals
+        function updateCheckoutSummary() {
             let subtotal = 0;
             cart.forEach(item => {
                 const priceVal = parseFloat(item.price.replace('dt', ''));
@@ -1846,12 +1911,37 @@
 
             const activeShippingFee = subtotal >= 100 ? 0 : baseShippingFee;
             summaryShipping.textContent = activeShippingFee === 0 ? 'Gratuit' : activeShippingFee.toFixed(2) + 'dt';
-            summaryTotal.textContent = (subtotal + activeShippingFee).toFixed(2) + 'dt';
 
-            // Close cart and open checkout
-            toggleCart();
-            checkoutOverlay.classList.add('open');
-            document.body.style.overflow = 'hidden'; // Prevent scrolling
+            const discountAmount = subtotal * currentDiscount;
+            const total = (subtotal - discountAmount) + activeShippingFee;
+
+            summaryTotal.textContent = total.toFixed(2) + 'dt';
+        }
+
+        const applyPromoBtn = document.getElementById('applyPromoBtn');
+        const promoInput = document.getElementById('promoCode');
+        const promoMessage = document.getElementById('promoMessage');
+
+        if (applyPromoBtn) {
+            applyPromoBtn.addEventListener('click', () => {
+                const code = promoInput.value.trim().toUpperCase();
+                if (code === 'AURA10') {
+                    currentDiscount = 0.10;
+                    promoMessage.textContent = 'Code AURA10 appliqué (-10%)';
+                    promoMessage.className = 'promo-message success';
+                    updateCheckoutSummary();
+                } else if (code === '') {
+                    currentDiscount = 0;
+                    promoMessage.textContent = '';
+                    promoMessage.className = 'promo-message';
+                    updateCheckoutSummary();
+                } else {
+                    currentDiscount = 0;
+                    promoMessage.textContent = 'Code invalide';
+                    promoMessage.className = 'promo-message error';
+                    updateCheckoutSummary();
+                }
+            });
         }
 
         function closeCheckout() {
