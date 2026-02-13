@@ -117,11 +117,13 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 20px;
-            flex-wrap: nowrap;
-            /* Prevent wrapping for that clean row look */
+            gap: 30px;
+            /* Increased gap for better spacing */
+            flex-wrap: wrap;
+            /* Allow wrapping for a better grid look */
             width: 100%;
-            max-width: 1200px;
+            max-width: 1000px;
+            /* Slightly reduced max-width to encourage 3-4 items per row */
         }
 
         .brand-circle {
