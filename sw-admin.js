@@ -1,8 +1,8 @@
 const CACHE_NAME = 'auraskin-admin-v1';
 const ASSETS = [
-    '/admin.html',
-    '/manifest-admin.json',
-    '/logo.png'
+    'admin.html',
+    'manifest-admin.json',
+    'logo.png'
 ];
 
 self.addEventListener('install', (e) => {
