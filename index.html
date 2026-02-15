@@ -1689,19 +1689,28 @@
         }
 
         function renderProducts(brand, collectionName = null) {
+            if (!productGrid) return;
             productGrid.innerHTML = '';
-            let products = productsData[brand] || [];
 
-            if (collectionName) {
-                products = products.filter(p => p.collection === collectionName);
-            }
-
-            if (products.length === 0) {
-                productGrid.innerHTML = '<p style="color:white; font-size: 1.2rem; grid-column: 1/-1; text-align: center;">No products found for this brand yet.</p>';
+            if (!productsData || !productsData[brand]) {
+                productGrid.innerHTML = '<p style="color:white; font-size: 1.2rem; grid-column: 1/-1; text-align: center;">Marque non trouvée ou aucun produit disponible.</p>';
                 return;
             }
 
-            products.forEach((product, index) => {
+            // Get original products with their true indices
+            let productsWithIndices = productsData[brand].map((p, i) => ({ ...p, originalIndex: i }));
+
+            if (collectionName) {
+                productsWithIndices = productsWithIndices.filter(p => p.collection === collectionName);
+            }
+
+            if (productsWithIndices.length === 0) {
+                productGrid.innerHTML = '<p style="color:white; font-size: 1.2rem; grid-column: 1/-1; text-align: center;">Aucun produit trouvé dans cette collection.</p>';
+                return;
+            }
+
+            productsWithIndices.forEach((product) => {
+                const index = product.originalIndex;
                 const card = document.createElement('div');
                 card.className = 'product-card';
 
@@ -1764,7 +1773,7 @@
         }
 
         function handleRouting() {
-            const hash = window.location.hash;
+            const hash = window.location.hash || '';
             const isInitial = document.documentElement.classList.contains('show-landing') === false &&
                 !screen.classList.contains('hidden') &&
                 hash !== '' && hash !== '#landing';
@@ -1774,9 +1783,20 @@
             } else if (hash === '#brands') {
                 showBrands(isInitial);
             } else if (hash.startsWith('#products=')) {
-                const params = new URLSearchParams(hash.substring(1));
-                const brandName = params.get('products');
-                const collection = params.get('collection');
+                // Fallback parsing if URLSearchParams is tricky with leading characters
+                let brandName = '';
+                let collection = '';
+
+                try {
+                    const params = new URLSearchParams(hash.substring(1));
+                    brandName = params.get('products');
+                    collection = params.get('collection');
+                } catch (e) {
+                    // Manual fallback for simple brands
+                    brandName = decodeURIComponent(hash.split('=')[1].split('&')[0]);
+                }
+
+                if (!brandName) return; // Error safety
 
                 if (brandName === 'SKIN 1004' && !collection) {
                     showCollections(brandName, isInitial);
