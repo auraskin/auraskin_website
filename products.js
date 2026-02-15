@@ -315,7 +315,7 @@ const productsData = {
             sizes: []
         }
     ],
-    "EQB": [
+    "EQQUALBERRY": [
         {
             name: "Vitamin Illuminating Serum",
             tagline: "Glow Filter - For a natural, radiant complexion.",
@@ -323,6 +323,15 @@ const productsData = {
             price: "96dt",
             originalPrice: "120dt",
             image: "assets/products/eqb_serum.webp",
+            sizes: []
+        },
+        {
+            name: "Vitamin Illuminating Cream",
+            tagline: "Glow Filter - Skin energy boost.",
+            description: "A nourishing cream that helps to illuminate and vitalize skin for a healthy glow.",
+            price: "125dt",
+            originalPrice: "",
+            image: "assets/products/eqb_cream.webp",
             sizes: []
         }
     ]
