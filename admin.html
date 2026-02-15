@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="manifest" href="manifest-admin.json">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="products.js"></script>
     <style>
         :root {
             --primary: #f79da6;
@@ -163,6 +164,76 @@
                 font-size: 1.2rem;
             }
         }
+
+        /* Order Edit Styles */
+        .add-product-container {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 20px;
+            border: 1px dashed var(--primary);
+            display: none;
+        }
+
+        .add-product-container select,
+        .add-product-container button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            font-family: inherit;
+        }
+
+        .add-product-container button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            margin-bottom: 0;
+        }
+
+        .btn-add-item {
+            background: none;
+            border: 1.5px solid var(--primary);
+            color: var(--secondary);
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+
+        .btn-add-item:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-delete {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #eee;
+            color: #999;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-delete:hover {
+            background: #ff4444;
+            color: white;
+        }
     </style>
 </head>
 
@@ -275,7 +346,8 @@
                 const statusClass = order.status === 'Nouveau' ? 'status-nouveau' : (order.status === 'Expédié' ? 'status-expédié' : '');
 
                 return `
-                    <div class="order-card">
+                    <div class="order-card" style="position: relative;">
+                        <button class="btn-delete" onclick="deleteOrder('${order.id}')" title="Supprimer la commande">✕</button>
                         <div class="order-header">
                             <span class="order-status ${statusClass}">${order.status}</span>
                             <span style="font-size: 0.8rem; color: #999;">${date} | ${new Date(order.created_at).toLocaleDateString()}</span>
@@ -287,6 +359,20 @@
                             <div style="margin-top: 10px; font-size: 0.85rem; color: #555; background: #fafafa; padding: 10px; border-radius: 10px;">
                                 <strong>Articles :</strong><br>
                                 ${order.items.map(item => `- ${item.name} (${item.variant})`).join('<br>')}
+                            </div>
+                            <button class="btn-add-item" onclick="toggleAddProduct('${order.id}')">+ Ajouter un article</button>
+                            
+                            <div id="add-product-${order.id}" class="add-product-container">
+                                <select id="product-select-${order.id}" onchange="updateVariantsDropdown('${order.id}')">
+                                    <option value="">Sélectionner un produit...</option>
+                                    ${Object.keys(productsData).flatMap(brand =>
+                    productsData[brand].map(p => `<option value="${brand}|${p.name}">${brand} - ${p.name}</option>`)
+                ).join('')}
+                                </select>
+                                <select id="variant-select-${order.id}" style="display:none;">
+                                    <option value="">Sélectionner variante...</option>
+                                </select>
+                                <button onclick="confirmAddProduct('${order.id}')">Confirmer l'ajout</button>
                             </div>
                         </div>
                         <div class="order-footer">
@@ -302,7 +388,6 @@
                 `;
             }).join('');
         }
-
         async function updateStatus(id, newStatus) {
             const { error } = await supabaseClient
                 .from('orders')
@@ -312,6 +397,96 @@
             if (error) {
                 alert("Erreur lors de la mise à jour");
                 console.error(error);
+            }
+        }
+
+        async function deleteOrder(id) {
+            if (!confirm("Êtes-vous sûr de vouloir supprimer cette commande ?)")) return;
+
+            const { error } = await supabaseClient
+                .from('orders')
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                alert("Erreur lors de la suppression");
+                console.error(error);
+            }
+        }
+
+        function toggleAddProduct(orderId) {
+            const container = document.getElementById(`add-product-${orderId}`);
+            container.style.display = container.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function updateVariantsDropdown(orderId) {
+            const select = document.getElementById(`product-select-${orderId}`);
+            const variantSelect = document.getElementById(`variant-select-${orderId}`);
+            const [brand, productName] = select.value.split('|');
+
+            if (!brand) {
+                variantSelect.style.display = 'none';
+                return;
+            }
+
+            const product = productsData[brand].find(p => p.name === productName);
+            if (product && product.sizes && product.sizes.length > 0) {
+                variantSelect.innerHTML = product.sizes.map(s => `<option value="${s.label}">${s.label} (${s.price})</option>`).join('');
+                variantSelect.style.display = 'block';
+            } else {
+                variantSelect.style.display = 'none';
+                variantSelect.innerHTML = '<option value="Standard">Standard</option>';
+            }
+        }
+
+        async function confirmAddProduct(orderId) {
+            const select = document.getElementById(`product-select-${orderId}`);
+            const variantSelect = document.getElementById(`variant-select-${orderId}`);
+            const [brand, productName] = select.value.split('|');
+
+            if (!brand) return alert("Sélectionnez un produit");
+
+            const product = productsData[brand].find(p => p.name === productName);
+            const variantLabel = variantSelect.style.display === 'block' ? variantSelect.value : 'Standard';
+
+            // Find price
+            let itemPrice = product.price;
+            if (variantLabel !== 'Standard') {
+                const variant = product.sizes.find(s => s.label === variantLabel);
+                if (variant) itemPrice = variant.price;
+            }
+
+            // Fetch current order to update it
+            const { data: order, error: fetchError } = await supabaseClient
+                .from('orders')
+                .select('*')
+                .eq('id', orderId)
+                .single();
+
+            if (fetchError) return alert("Erreur lors de la récupération de la commande");
+
+            const currentItems = order.items || [];
+            const newItems = [...currentItems, { name: productName, variant: variantLabel, price: itemPrice }];
+
+            // Calculate new total
+            const currentTotal = parseFloat(order.total_price.replace('dt', '') || '0');
+            const addedPrice = parseFloat(itemPrice.replace('dt', '') || '0');
+            const newTotalPrice = (currentTotal + addedPrice).toFixed(2) + 'dt';
+
+            const { error: updateError } = await supabaseClient
+                .from('orders')
+                .update({
+                    items: newItems,
+                    total_price: newTotalPrice
+                })
+                .eq('id', orderId);
+
+            if (updateError) {
+                alert("Erreur lors de l'ajout du produit");
+                console.error(updateError);
+            } else {
+                toggleAddProduct(orderId);
+                // Realtime will trigger the refresh
             }
         }
 

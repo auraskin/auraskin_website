@@ -2,6 +2,7 @@ const CACHE_NAME = 'auraskin-admin-v1';
 const ASSETS = [
     'admin.html',
     'manifest-admin.json',
+    'products.js',
     'logo.png'
 ];
 
