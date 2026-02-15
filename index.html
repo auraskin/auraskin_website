@@ -20,7 +20,7 @@
     </script>
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="products.js"></script>
+    <script src="products.js?v=2.1"></script>
     <!-- Font Awesome for Social Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -1467,16 +1467,27 @@
 
         // Flatten products on load for easier searching
         function initializeSearchIndex() {
-            allProducts = [];
-            Object.keys(productsData).forEach(brand => {
-                productsData[brand].forEach((product, index) => {
-                    allProducts.push({
-                        ...product,
-                        brand: brand,
-                        originalIndex: index // Keep track for addToCart
-                    });
+            try {
+                if (typeof productsData === 'undefined') {
+                    console.error("productsData is not defined. Check products.js loading.");
+                    return;
+                }
+                allProducts = [];
+                Object.keys(productsData).forEach(brand => {
+                    if (Array.isArray(productsData[brand])) {
+                        productsData[brand].forEach((product, index) => {
+                            allProducts.push({
+                                ...product,
+                                brand: brand,
+                                originalIndex: index
+                            });
+                        });
+                    }
                 });
-            });
+                console.log("Search index initialized with", allProducts.length, "products");
+            } catch (e) {
+                console.error("Error initializing search index:", e);
+            }
         }
         initializeSearchIndex();
 
@@ -1689,19 +1700,28 @@
         }
 
         function renderProducts(brand, collectionName = null) {
+            console.log("Rendering products for brand:", brand, "collection:", collectionName);
             if (!productGrid) return;
             productGrid.innerHTML = '';
 
-            if (!productsData || !productsData[brand]) {
+            if (typeof productsData === 'undefined') {
+                productGrid.innerHTML = '<p style="color:white; font-size: 1.2rem; grid-column: 1/-1; text-align: center;">Erreur: Les données des produits n\'ont pas pu être chargées.</p>';
+                return;
+            }
+
+            // Case-insensitive brand lookup
+            const brandKey = Object.keys(productsData).find(k => k.toLowerCase() === brand.toLowerCase());
+
+            if (!brandKey || !productsData[brandKey]) {
                 productGrid.innerHTML = '<p style="color:white; font-size: 1.2rem; grid-column: 1/-1; text-align: center;">Marque non trouvée ou aucun produit disponible.</p>';
                 return;
             }
 
             // Get original products with their true indices
-            let productsWithIndices = productsData[brand].map((p, i) => ({ ...p, originalIndex: i }));
+            let productsWithIndices = productsData[brandKey].map((p, i) => ({ ...p, originalIndex: i }));
 
             if (collectionName) {
-                productsWithIndices = productsWithIndices.filter(p => p.collection === collectionName);
+                productsWithIndices = productsWithIndices.filter(p => p.collection && p.collection.toLowerCase() === collectionName.toLowerCase());
             }
 
             if (productsWithIndices.length === 0) {
