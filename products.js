@@ -36,6 +36,7 @@ const productsData = {
             price: "66dt",
             originalPrice: "77dt",
             image: "assets/products/centella_toner.jpg",
+            collection: "Centella",
             sizes: [
                 { label: "210ml", price: "66dt", originalPrice: "77dt" },
                 { label: "400ml", price: "105dt", originalPrice: "110dt" }
@@ -48,6 +49,7 @@ const productsData = {
             price: "81dt",
             originalPrice: "",
             image: "assets/products/skin1004_sun_serum.jpg",
+            collection: "Hyalu-Cica",
             sizes: []
         },
         {
@@ -57,6 +59,7 @@ const productsData = {
             price: "70dt",
             originalPrice: "",
             image: "assets/products/skin1004-mask-pad-70-pads-130ml-centella-quick-calming-pad-38409144566006_1440x.webp",
+            collection: "Centella",
             sizes: []
         },
         {
@@ -66,6 +69,7 @@ const productsData = {
             price: "80dt",
             originalPrice: "98dt",
             image: "assets/products/skin1004-ampoule-serum-centella-ampoule-38409088401654_1440x.webp",
+            collection: "Centella",
             sizes: []
         },
         {
@@ -75,6 +79,7 @@ const productsData = {
             price: "78dt",
             originalPrice: "90dt",
             image: "assets/products/skin1004-cleanser-centella-light-cleansing-oil-38409133490422_1440x.webp",
+            collection: "Centella",
             sizes: []
         },
         {
@@ -84,6 +89,7 @@ const productsData = {
             price: "63dt",
             originalPrice: "",
             image: "assets/products/skin1004-cleanser-madagascar-centella-ampoule-foam-36436059226358_1440x.jpg",
+            collection: "Centella",
             sizes: []
         },
         {
@@ -93,6 +99,7 @@ const productsData = {
             price: "90dt",
             originalPrice: "125dt",
             image: "assets/products/skin1004-others-centella-travel-kit-40032160940278_1440x.webp",
+            collection: "Centella",
             sizes: []
         },
         {
@@ -102,6 +109,7 @@ const productsData = {
             price: "67dt",
             originalPrice: "115dt",
             image: "assets/products/skin1004-ampoule-serum-100ml-madagascar-centella-tone-brightening-capsule-ampoule-36440330895606_1440x.webp",
+            collection: "Tone Brightening",
             sizes: []
         },
         {
@@ -111,6 +119,7 @@ const productsData = {
             price: "65dt",
             originalPrice: "105dt",
             image: "assets/products/skin1004-poremizing-quick-clay-stick-mask-39362357494006_1440x.webp",
+            collection: "Poremizing",
             sizes: []
         },
         {
@@ -120,6 +129,7 @@ const productsData = {
             price: "69dt",
             originalPrice: "79dt",
             image: "assets/products/skin1004-poremizing-deep-cleansing-foam-38642870223094_1440x.webp",
+            collection: "Poremizing",
             sizes: []
         },
         {
@@ -129,6 +139,7 @@ const productsData = {
             price: "98dt",
             originalPrice: "134dt",
             image: "assets/products/skin1004_ampoule_kit.webp",
+            collection: "Centella",
             sizes: []
         }
     ],
