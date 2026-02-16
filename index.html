@@ -568,6 +568,12 @@
             max-width: 1000px;
         }
 
+        .coll-circle.with-image {
+            padding: 0;
+            overflow: hidden;
+            border: none;
+        }
+
         .coll-circle {
             width: 140px;
             height: 140px;
@@ -1902,7 +1908,8 @@
                     circle.className = `coll-circle ${coll.class}`;
 
                     if (coll.image) {
-                        circle.innerHTML = `<img src="${coll.image}" alt="${coll.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+                        circle.classList.add('with-image');
+                        circle.innerHTML = `<img src="${coll.image}" alt="${coll.name}" style="width: 100%; height: 100%; object-fit: cover;">`;
                     } else {
                         circle.textContent = coll.name;
                     }
