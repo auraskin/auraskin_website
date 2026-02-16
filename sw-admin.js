@@ -1,4 +1,4 @@
-const CACHE_NAME = 'auraskin-admin-v1';
+const CACHE_NAME = 'auraskin-admin-v2';
 const ASSETS = [
     'admin.html',
     'manifest-admin.json',

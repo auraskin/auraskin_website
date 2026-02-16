@@ -234,6 +234,83 @@
             background: #ff4444;
             color: white;
         }
+
+        /* Tabs Styles */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            background: #fff;
+            padding: 5px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 50px;
+            border: none;
+            background: none;
+            color: #999;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 10px rgba(247, 157, 166, 0.3);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Products Tab Styles */
+        .product-card {
+            background: #fff;
+            padding: 15px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+        }
+
+        .product-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            object-fit: cover;
+            background: #fdf2f3;
+        }
+
+        .product-info h5 {
+            font-size: 0.9rem;
+            margin-bottom: 2px;
+        }
+
+        .product-info p {
+            font-size: 0.75rem;
+            color: #999;
+        }
+
+        .product-price-list {
+            margin-left: auto;
+            text-align: right;
+            font-weight: 700;
+            color: var(--secondary);
+            font-size: 0.85rem;
+        }
     </style>
 </head>
 
@@ -262,19 +339,32 @@
         </div>
     </div>
 
-    <div class="stats-grid">
-        <div class="stat-card">
-            <h3>Nouveaux</h3>
-            <p id="todayCount">0</p>
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('orders')">Commandes 📦</button>
+        <button class="tab-btn" onclick="switchTab('products')">Produits 🧴</button>
+    </div>
+
+    <div id="ordersContent" class="tab-content active">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Nouveaux</h3>
+                <p id="todayCount">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>Total Ventes</h3>
+                <p id="totalRevenue">0 dt</p>
+            </div>
         </div>
-        <div class="stat-card">
-            <h3>Total Ventes</h3>
-            <p id="totalRevenue">0 dt</p>
+
+        <div class="order-list" id="orderList">
+            <p style="text-align: center; color: #999; margin-top: 50px;">Chargement des commandes...</p>
         </div>
     </div>
 
-    <div class="order-list" id="orderList">
-        <p style="text-align: center; color: #999; margin-top: 50px;">Chargement des commandes...</p>
+    <div id="productsContent" class="tab-content">
+        <div class="order-list" id="productList">
+            <!-- Products will be rendered here -->
+        </div>
     </div>
 
     <script>
@@ -307,7 +397,45 @@
                 navigator.serviceWorker.register('./sw-admin.js');
             }
             fetchOrders();
+            renderProducts();
             setupRealtime();
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            if (tab === 'orders') {
+                document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+                document.getElementById('ordersContent').classList.add('active');
+            } else {
+                document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+                document.getElementById('productsContent').classList.add('active');
+                renderProducts();
+            }
+        }
+
+        function renderProducts() {
+            const list = document.getElementById('productList');
+            list.innerHTML = Object.keys(productsData).map(brand => {
+                const brandProducts = productsData[brand].map(p => {
+                    const prices = p.sizes && p.sizes.length > 0
+                        ? p.sizes.map(s => `${s.label}: ${s.price}`).join(' | ')
+                        : p.price;
+
+                    return `
+                        <div class="product-card">
+                            <img src="${p.image}" class="product-img" onerror="this.src='logo.png'">
+                            <div class="product-info">
+                                <h5>${p.name}</h5>
+                                <p>${brand} ${p.collection ? `| ${p.collection}` : ''}</p>
+                            </div>
+                            <div class="product-price-list">${prices}</div>
+                        </div>
+                    `;
+                }).join('');
+                return brandProducts;
+            }).join('');
         }
 
         async function fetchOrders() {
@@ -369,9 +497,12 @@
                     productsData[brand].map(p => `<option value="${brand}|${p.name}">${brand} - ${p.name}</option>`)
                 ).join('')}
                                 </select>
-                                <select id="variant-select-${order.id}" style="display:none;">
+                                <select id="variant-select-${order.id}" style="display:none;" onchange="updateDefaultPrice('${order.id}')">
                                     <option value="">Sélectionner variante...</option>
                                 </select>
+                                <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                                    <input type="text" id="custom-price-${order.id}" placeholder="Prix spécial (ex: 45dt)" style="flex: 1; padding: 10px; border-radius: 10px; border: 1px solid #ddd; font-family: inherit;">
+                                </div>
                                 <button onclick="confirmAddProduct('${order.id}')">Confirmer l'ajout</button>
                             </div>
                         </div>
@@ -433,10 +564,31 @@
             if (product && product.sizes && product.sizes.length > 0) {
                 variantSelect.innerHTML = product.sizes.map(s => `<option value="${s.label}">${s.label} (${s.price})</option>`).join('');
                 variantSelect.style.display = 'block';
+                updateDefaultPrice(orderId);
             } else {
                 variantSelect.style.display = 'none';
                 variantSelect.innerHTML = '<option value="Standard">Standard</option>';
+                updateDefaultPrice(orderId);
             }
+        }
+
+        function updateDefaultPrice(orderId) {
+            const select = document.getElementById(`product-select-${orderId}`);
+            const variantSelect = document.getElementById(`variant-select-${orderId}`);
+            const priceInput = document.getElementById(`custom-price-${orderId}`);
+            const [brand, productName] = select.value.split('|');
+
+            if (!brand) return;
+
+            const product = productsData[brand].find(p => p.name === productName);
+            const variantLabel = variantSelect.style.display === 'block' ? variantSelect.value : 'Standard';
+
+            let price = product.price;
+            if (variantLabel !== 'Standard') {
+                const v = product.sizes.find(s => s.label === variantLabel);
+                if (v) price = v.price;
+            }
+            priceInput.value = price;
         }
 
         async function confirmAddProduct(orderId) {
@@ -466,12 +618,17 @@
             if (fetchError) return alert("Erreur lors de la récupération de la commande");
 
             const currentItems = order.items || [];
-            const newItems = [...currentItems, { name: productName, variant: variantLabel, price: itemPrice }];
+
+            // USE CUSTOM PRICE IF PROVIDED
+            const customPrice = document.getElementById(`custom-price-${orderId}`).value.trim();
+            const finalPrice = customPrice || itemPrice;
+
+            const newItems = [...currentItems, { name: productName, variant: variantLabel, price: finalPrice }];
 
             // Calculate new total
             const currentTotal = parseFloat(order.total_price.replace('dt', '') || '0');
-            const addedPrice = parseFloat(itemPrice.replace('dt', '') || '0');
-            const newTotalPrice = (currentTotal + addedPrice).toFixed(2) + 'dt';
+            const addedPrice = parseFloat(finalPrice.replace('dt', '') || '0');
+            const newTotalPrice = (currentTotal + addedPrice).toFixed(1) + 'dt';
 
             const { error: updateError } = await supabaseClient
                 .from('orders')
