@@ -167,6 +167,19 @@ const productsData = {
                 { label: "30ml", price: "67dt", originalPrice: "" },
                 { label: "50ml", price: "95dt", originalPrice: "" }
             ]
+        },
+        {
+            name: "Madagascar Centella Hyalu-Cica Brightening Toner",
+            tagline: "A skin-brightening toner that provides deep hydration and improves skin texture with Hyalu-Cica Formula.",
+            description: "Product Benefits: Brightening, Hydrating, Soothing. Skin Type: All skin types, including sensitive.",
+            price: "43dt",
+            originalPrice: "",
+            image: "assets/products/skin1004-toner-madagascar-centella-hyalu-cica-brightening-toner-36436927283446_1440x.webp",
+            collection: "Hyalu-Cica",
+            sizes: [
+                { label: "30ml", price: "43dt", originalPrice: "" },
+                { label: "210ml", price: "86dt", originalPrice: "" }
+            ]
         }
     ],
     "Mixsoon": [
