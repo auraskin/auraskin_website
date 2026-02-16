@@ -141,6 +141,19 @@ const productsData = {
             image: "assets/products/skin1004_ampoule_kit.webp",
             collection: "Centella",
             sizes: []
+        },
+        {
+            name: "Madagascar Centella Cream",
+            tagline: "A skin-barrier strengthening cream that contains 72% Centella Asiatica extract and 4 types of plant-based ceramides for deep hydration and soothing.",
+            description: "Product Benefits: Calming, Soothing, Barrier Care. Skin Type: Sensitive, Normal, Dry.",
+            price: "86dt",
+            originalPrice: "",
+            image: "assets/products/skin1004-cream-centella-cream-38642822906102_1440x.webp",
+            collection: "Centella",
+            sizes: [
+                { label: "75ml", price: "86dt", originalPrice: "" },
+                { label: "30ml", price: "43dt", originalPrice: "" }
+            ]
         }
     ],
     "Mixsoon": [
