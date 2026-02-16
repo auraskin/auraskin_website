@@ -270,43 +270,43 @@ const productsData = {
             name: "Glycolic Acid 7% Exfoliating Toner",
             tagline: "A daily AHA exfoliating toner that gently resurfaces the skin.",
             description: "This toner offers mild exfoliation for improved skin radiance and visible clarity.",
-            price: "45dt",
+            price: "52dt",
             originalPrice: "",
             image: "assets/products/rdn-glycolic-acid-7pct-exfoliating-toner-100ml.webp",
             sizes: [
-                { label: "100ml", price: "45dt", originalPrice: "" },
-                { label: "240ml", price: "65dt", originalPrice: "" }
+                { label: "100ml", price: "52dt", originalPrice: "" },
+                { label: "240ml", price: "78dt", originalPrice: "" }
             ]
         },
         {
             name: "Hyaluronic Acid 2% + B5",
             tagline: "A hydration support formula with ultra-pure, vegan hyaluronic acid.",
             description: "This formulation combines low-, medium- and high-molecular weight hyaluronic acid to offer multi-depth hydration.",
-            price: "47dt",
+            price: "51dt",
             originalPrice: "",
             image: "assets/products/ord-hyaluronic-acid-2pct-B5-30ml-Clr-Acu.webp",
             sizes: [
-                { label: "30ml", price: "47dt", originalPrice: "" },
-                { label: "60ml", price: "84dt", originalPrice: "" }
+                { label: "30ml", price: "51dt", originalPrice: "" },
+                { label: "60ml", price: "100dt", originalPrice: "" }
             ]
         },
         {
             name: "Niacinamide 10% + Zinc 1%",
             tagline: "A high-strength vitamin and mineral blemish formula.",
             description: "Niacinamide (Vitamin B3) is indicated to reduce the appearance of skin blemishes and congestion.",
-            price: "29dt",
+            price: "34dt",
             originalPrice: "",
             image: "assets/products/rdn-niacinamide-10pct-zinc-1pct-30ml.webp",
             sizes: [
-                { label: "30ml", price: "29dt", originalPrice: "" },
-                { label: "60ml", price: "52dt", originalPrice: "" }
+                { label: "30ml", price: "34dt", originalPrice: "" },
+                { label: "60ml", price: "62dt", originalPrice: "" }
             ]
         },
         {
             name: "AHA 30% + BHA 2% Peeling Solution",
             tagline: "A 10-minute exfoliating facial.",
             description: "Advanced-level exfoliating solution with 30% AHA and 2% BHA to target dullness.",
-            price: "45dt",
+            price: "55dt",
             originalPrice: "",
             image: "assets/products/rdn-aha-30pct-bha-2pct-peeling-solution-30ml.webp",
             sizes: []
@@ -324,7 +324,7 @@ const productsData = {
             name: "Caffeine Solution 5% + EGCG",
             tagline: "A depuffing solution for tired eyes.",
             description: "This light-textured formula contains an extremely high 5% concentration of caffeine, supplemented with highly-purified EGCG.",
-            price: "44dt",
+            price: "53dt",
             originalPrice: "",
             image: "assets/products/rdn-caffeine-solution-5pct-egcg-30ml.webp",
             sizes: []
@@ -333,7 +333,7 @@ const productsData = {
             name: "UV Filters SPF 45 Serum",
             tagline: "A lightweight, invisible sunscreen serum.",
             description: "Broad spectrum protection with antioxidants. Provides high protection against UVA and UVB rays while maintaining a serum-like finish.",
-            price: "91dt",
+            price: "109dt",
             originalPrice: "",
             image: "assets/products/ord-uv-filters-spf-45-serum-usa-60ml.webp",
             sizes: []
