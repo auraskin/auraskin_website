@@ -1774,26 +1774,27 @@
                     if (activeSizeBtn) {
                         sizeIdx = parseInt(activeSizeBtn.getAttribute('data-size-index'));
                     }
-                    addToCart(index, sizeIdx, brand);
+                    addToCart(index, sizeIdx, brandKey);
                 });
-            });
 
-            const sizeBtns = productGrid.querySelectorAll('.size-btn');
-            sizeBtns.forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const productIndex = parseInt(e.target.getAttribute('data-index'));
-                    const sizeIndex = parseInt(e.target.getAttribute('data-size-index'));
-                    const product = products[productIndex];
-                    const selectedSize = product.sizes[sizeIndex];
+                // Price update logic for sizes
+                const sizeBtns = card.querySelectorAll('.size-btn');
+                sizeBtns.forEach(szBtn => {
+                    szBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        // Remove active from peers
+                        sizeBtns.forEach(b => b.classList.remove('active'));
+                        szBtn.classList.add('active');
 
-                    const container = e.target.parentElement;
-                    container.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
-                    e.target.classList.add('active');
+                        const sIdx = parseInt(szBtn.getAttribute('data-size-index'));
+                        const selectedSize = product.sizes[sIdx];
 
-                    const priceContainer = document.getElementById(`price-container-${productIndex}`);
-                    priceContainer.querySelector('.product-price').textContent = selectedSize.price;
-                    priceContainer.querySelector('.product-original-price').textContent = selectedSize.originalPrice;
+                        const priceContainer = document.getElementById(`price-container-${index}`);
+                        if (priceContainer && selectedSize) {
+                            priceContainer.querySelector('.product-price').textContent = selectedSize.price;
+                            priceContainer.querySelector('.product-original-price').textContent = selectedSize.originalPrice || '';
+                        }
+                    });
                 });
             });
         }
