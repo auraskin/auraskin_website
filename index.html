@@ -1889,7 +1889,7 @@
 
             if (brandName === 'SKIN 1004') {
                 const collections = [
-                    { name: 'Centella', class: 'coll-centella' },
+                    { name: 'Centella', class: 'coll-centella', image: 'assets/products/Centella.webp' },
                     { name: 'Hyalu-Cica', class: 'coll-hyalu' },
                     { name: 'Poremizing', class: 'coll-pore' },
                     { name: 'Tea-Trica', class: 'coll-tea' },
@@ -1900,7 +1900,13 @@
                 collections.forEach(coll => {
                     const circle = document.createElement('div');
                     circle.className = `coll-circle ${coll.class}`;
-                    circle.textContent = coll.name;
+
+                    if (coll.image) {
+                        circle.innerHTML = `<img src="${coll.image}" alt="${coll.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+                    } else {
+                        circle.textContent = coll.name;
+                    }
+
                     circle.onclick = () => {
                         window.location.hash = `products=${encodeURIComponent(brandName)}&collection=${encodeURIComponent(coll.name)}`;
                     };
