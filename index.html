@@ -1287,11 +1287,14 @@
         <div class="collection-grid" id="collectionGrid">
             <!-- Circles injected via JS -->
         </div>
-        <button onclick="showBrands()"
+        <button onclick="window.location.hash = 'brands'"
             style="margin-top: 40px; padding: 10px 30px; border-radius: 50px; border: 1.5px solid #333; background: none; color: #333; cursor: pointer; font-family: inherit; font-weight: 700;">Back
             to Brands</button>
     </section>
     <section class="products-section" id="productsSection">
+        <button onclick="window.history.back()"
+            style="position: absolute; top: 20px; left: 20px; background: none; border: none; color: inherit; font-size: 1.5rem; cursor: pointer; z-index: 10; font-family: inherit;">←
+            Back</button>
         <h1 class="products-header" id="brandTitle">Brand Name</h1>
         <div class="products-grid" id="productGrid">
             <div class="product-card">[]</div>
