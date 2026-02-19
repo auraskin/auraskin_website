@@ -655,13 +655,25 @@
             const date = new Date(order.created_at).toLocaleDateString('fr-FR');
             const time = new Date(order.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 
-            const itemsHtml = order.items.map(item => `
+            const itemsHtml = order.items.map(item => {
+                // Try to lookup current image from productsData to ensure it's up to date
+                let imageUrl = item.image;
+                for (const brand in productsData) {
+                    const product = productsData[brand].find(p => p.name === item.name);
+                    if (product && product.image) {
+                        imageUrl = product.image;
+                        break;
+                    }
+                }
+
+                return `
                 <tr style="border-bottom: 1px solid #eee;">
-                    <td style="padding: 10px; width: 60px;"><img src="${item.image || 'logo.png'}" style="width: 50px; height: 50px; object-fit: contain; border-radius: 5px;"></td>
+                    <td style="padding: 10px; width: 60px;"><img src="${imageUrl || 'logo.png'}" style="width: 50px; height: 50px; object-fit: contain; border-radius: 5px;" onerror="this.src='logo.png'"></td>
                     <td style="padding: 10px; text-align: left;">${item.name} <br><span style="font-size: 0.8rem; color: #666;">${item.variant}</span></td>
                     <td style="padding: 10px; text-align: right;">${item.price}</td>
                 </tr>
-            `).join('');
+            `;
+            }).join('');
 
             const htmlContent = `
                 <!DOCTYPE html>
