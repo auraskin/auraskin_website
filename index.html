@@ -1242,6 +1242,36 @@
             }
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Load price overrides from Supabase and patch productsData on arrival
+        (async () => {
+            try {
+                const sb = supabase.createClient(
+                    'https://tthnppyrrjfbmfjnfqnq.supabase.co',
+                    'sb_publishable_8r46Ru1eCBhchCdhzM3hsg_TC_5vZz3'
+                );
+                const { data } = await sb.from('product_prices').select('*');
+                if (data && data.length > 0) {
+                    data.forEach(row => {
+                        for (const brand in productsData) {
+                            const product = productsData[brand].find(p => p.name === row.product_name);
+                            if (product) {
+                                if (row.price) product.price = row.price;
+                                if (row.original_price !== undefined) product.originalPrice = row.original_price || '';
+                                if (row.sizes) {
+                                    try { product.sizes = JSON.parse(row.sizes); } catch (e) { }
+                                }
+                            }
+                        }
+                    });
+                }
+            } catch (e) {
+                // Fail silently — fall back to products.js prices
+                console.warn('Could not load price overrides:', e);
+            }
+        })();
+    </script>
 </head>
 
 <body>

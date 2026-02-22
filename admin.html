@@ -396,6 +396,7 @@
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('./sw-admin.js');
             }
+            await loadPriceOverrides();
             fetchOrders();
             renderProducts();
             setupRealtime();
@@ -415,28 +416,146 @@
             }
         }
 
+        // Load any price overrides from Supabase and apply them to productsData
+        async function loadPriceOverrides() {
+            const { data, error } = await supabaseClient
+                .from('product_prices')
+                .select('*');
+
+            if (error) {
+                // table doesn't exist yet — that's ok
+                console.warn('product_prices table not found. Prices from products.js will be used.');
+                return;
+            }
+
+            if (data) {
+                data.forEach(row => {
+                    for (const brand in productsData) {
+                        const product = productsData[brand].find(p => p.name === row.product_name);
+                        if (product) {
+                            if (row.price) product.price = row.price;
+                            if (row.original_price !== null) product.originalPrice = row.original_price;
+                            // Update sizes if stored
+                            if (row.sizes) {
+                                try {
+                                    product.sizes = JSON.parse(row.sizes);
+                                } catch (e) { }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        async function saveProductPrice(productName, newPrice, newOriginalPrice, newSizes) {
+            const payload = {
+                product_name: productName,
+                price: newPrice,
+                original_price: newOriginalPrice || null,
+                sizes: newSizes ? JSON.stringify(newSizes) : null
+            };
+
+            const { error } = await supabaseClient
+                .from('product_prices')
+                .upsert(payload, { onConflict: 'product_name' });
+
+            if (error) {
+                alert('Erreur lors de la sauvegarde. Vérifiez que la table "product_prices" existe dans Supabase.');
+                console.error(error);
+                return false;
+            }
+            return true;
+        }
+
         function renderProducts() {
             const list = document.getElementById('productList');
             list.innerHTML = Object.keys(productsData).map(brand => {
-                const brandProducts = productsData[brand].map(p => {
-                    const prices = p.sizes && p.sizes.length > 0
-                        ? p.sizes.map(s => `${s.label}: ${s.price}`).join(' | ')
-                        : p.price;
+                const brandProducts = productsData[brand].map((p, pIdx) => {
+                    const productId = `${brand}-${pIdx}`.replace(/[^a-z0-9]/gi, '_');
+
+                    const sizesHtml = p.sizes && p.sizes.length > 0
+                        ? p.sizes.map((s, sIdx) => `
+                            <div style="display:flex; gap:8px; align-items:center; margin-bottom:5px;">
+                                <span style="min-width:50px; color:#777; font-size:0.85rem;">${s.label}:</span>
+                                <input type="text" id="size-price-${productId}-${sIdx}"
+                                    value="${s.price}"
+                                    style="width:80px; padding:4px 8px; border:1px solid #ddd; border-radius:6px; font-family:inherit;">
+                            </div>
+                        `).join('')
+                        : '';
 
                     return `
-                        <div class="product-card">
-                            <img src="${p.image}" class="product-img" onerror="this.src='logo.png'">
-                            <div class="product-info">
-                                <h5>${p.name}</h5>
-                                <p>${brand} ${p.collection ? `| ${p.collection}` : ''}</p>
+                        <div class="product-card" style="flex-direction:column; align-items:flex-start; gap:10px;">
+                            <div style="display:flex; gap:12px; align-items:center; width:100%;">
+                                <img src="${p.image}" class="product-img" onerror="this.src='logo.png'">
+                                <div class="product-info">
+                                    <h5>${p.name}</h5>
+                                    <p style="color:#999; font-size:0.8rem;">${brand}${p.collection ? ` · ${p.collection}` : ''}</p>
+                                </div>
                             </div>
-                            <div class="product-price-list">${prices}</div>
+                            <div style="width:100%; padding:10px; background:#f9f9f9; border-radius:10px;">
+                                ${p.sizes && p.sizes.length > 0 ? `
+                                    <p style="font-size:0.8rem; color:#aaa; margin-bottom:8px;">Prix par taille :</p>
+                                    ${sizesHtml}
+                                ` : `
+                                    <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+                                        <span style="color:#555; font-size:0.85rem; min-width:70px;">Prix :</span>
+                                        <input type="text" id="price-${productId}"
+                                            value="${p.price}"
+                                            style="width:90px; padding:4px 8px; border:1px solid #ddd; border-radius:6px; font-family:inherit;">
+                                    </div>
+                                    <div style="display:flex; gap:8px; align-items:center;">
+                                        <span style="color:#aaa; font-size:0.85rem; min-width:70px;">Barré :</span>
+                                        <input type="text" id="orig-${productId}"
+                                            value="${p.originalPrice || ''}"
+                                            placeholder="(aucun)"
+                                            style="width:90px; padding:4px 8px; border:1px solid #ddd; border-radius:6px; font-family:inherit; color:#aaa;">
+                                    </div>
+                                `}
+                                <button onclick="handleSavePrice('${brand}', ${pIdx}, '${productId}')"
+                                    style="margin-top:10px; padding:6px 18px; border-radius:20px; border:none;
+                                    background:var(--primary); color:#fff; cursor:pointer; font-family:inherit; font-size:0.85rem;">
+                                    💾 Sauvegarder
+                                </button>
+                                <span id="saved-${productId}" style="display:none; color:green; font-size:0.8rem; margin-left:8px;">✓ Sauvegardé !</span>
+                            </div>
                         </div>
                     `;
                 }).join('');
                 return brandProducts;
             }).join('');
         }
+
+        async function handleSavePrice(brand, pIdx, productId) {
+            const p = productsData[brand][pIdx];
+            let newSizes = null;
+
+            if (p.sizes && p.sizes.length > 0) {
+                newSizes = p.sizes.map((s, sIdx) => {
+                    const input = document.getElementById(`size-price-${productId}-${sIdx}`);
+                    return { ...s, price: input ? input.value.trim() : s.price };
+                });
+                // Update in-memory too
+                productsData[brand][pIdx].sizes = newSizes;
+            }
+
+            const newPrice = document.getElementById(`price-${productId}`)?.value.trim() || p.price;
+            const newOriginal = document.getElementById(`orig-${productId}`)?.value.trim() || '';
+
+            // Update in-memory
+            productsData[brand][pIdx].price = newPrice;
+            productsData[brand][pIdx].originalPrice = newOriginal;
+
+            const ok = await saveProductPrice(p.name, newPrice, newOriginal, newSizes);
+            if (ok) {
+                const indicator = document.getElementById(`saved-${productId}`);
+                if (indicator) {
+                    indicator.style.display = 'inline';
+                    setTimeout(() => indicator.style.display = 'none', 2500);
+                }
+            }
+        }
+
 
         async function fetchOrders() {
             const { data, error } = await supabaseClient
