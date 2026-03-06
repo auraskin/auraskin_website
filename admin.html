@@ -274,6 +274,124 @@
             flex-direction: column;
         }
 
+        /* Factures Tab Styles */
+        .facture-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .facture-card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+        }
+
+        .facture-img-container {
+            width: 100%;
+            height: 180px;
+            border-radius: 15px;
+            overflow: hidden;
+            background: #f9f9f9;
+            cursor: pointer;
+            border: 1px solid #eee;
+        }
+
+        .facture-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .facture-img-container:hover .facture-img {
+            transform: scale(1.05);
+        }
+
+        .facture-info h4 {
+            font-size: 1rem;
+            color: var(--secondary);
+            margin-bottom: 4px;
+        }
+
+        .facture-info p {
+            font-size: 0.85rem;
+            color: #777;
+        }
+
+        .facture-total {
+            font-weight: 700;
+            color: var(--secondary);
+            font-size: 1.1rem;
+            margin-top: auto;
+        }
+
+        .add-facture-form {
+            background: #fff;
+            padding: 25px;
+            border-radius: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #888;
+            margin-left: 5px;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 12px;
+            border-radius: 15px;
+            border: 1px solid #eee;
+            font-family: inherit;
+            background: #fafafa;
+        }
+
+        /* Overlay Zoom */
+        #imgOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            cursor: zoom-out;
+        }
+
+        #imgOverlay img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+        }
+
         /* Products Tab Styles */
         .product-card {
             background: #fff;
@@ -342,6 +460,7 @@
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('orders')">Commandes 📦</button>
         <button class="tab-btn" onclick="switchTab('products')">Produits 🧴</button>
+        <button class="tab-btn" onclick="switchTab('factures')">Factures 🧾</button>
     </div>
 
     <div id="ordersContent" class="tab-content active">
@@ -362,9 +481,76 @@
     </div>
 
     <div id="productsContent" class="tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="font-size: 1.2rem; color: var(--secondary);">Gestion des Produits</h2>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-status" id="migrationBtn" onclick="migrateToSupabase()"
+                    style="background: var(--primary); font-size: 0.7rem; display: none;">🚀 Migrer vers DB</button>
+                <div id="migrationStatus" style="font-size: 0.7rem; color: #999; align-self: center;"></div>
+            </div>
+        </div>
         <div class="order-list" id="productList">
             <!-- Products will be rendered here -->
         </div>
+    </div>
+
+    <div id="facturesContent" class="tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="font-size: 1.2rem; color: var(--secondary);">Factures Fournisseurs</h2>
+            <button class="btn-status" onclick="toggleFactureForm()" style="background: var(--secondary);">+
+                Ajouter</button>
+        </div>
+
+        <div id="factureForm" class="add-facture-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Fournisseur</label>
+                    <input type="text" id="fac_supplier" placeholder="ex: Amazon US">
+                </div>
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" id="fac_date">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Montant Total</label>
+                    <input type="text" id="fac_amount" placeholder="ex: 59.20">
+                </div>
+                <div class="form-group">
+                    <label>Devise</label>
+                    <select id="fac_currency">
+                        <option value="$">Dollars ($)</option>
+                        <option value="€">Euros (€)</option>
+                        <option value="£">Livres (£)</option>
+                        <option value="dt">Dinars (dt)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Taux de conversion (1 devise = ? dt)</label>
+                    <input type="text" id="fac_rate" placeholder="ex: 2.90">
+                </div>
+                <div class="form-group">
+                    <label>Image de la facture</label>
+                    <input type="file" id="fac_image" accept="image/*">
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-status" onclick="handleSaveFacture()" style="flex: 1;">Enregistrer</button>
+                <button class="btn-status" onclick="toggleFactureForm()"
+                    style="flex: 1; background: #eee; color: #666;">Annuler</button>
+            </div>
+        </div>
+
+        <div class="facture-grid" id="factureGrid">
+            <!-- Factures will be rendered here -->
+        </div>
+    </div>
+
+    <div id="imgOverlay" onclick="this.style.display='none'">
+        <img src="" id="overlayImg">
     </div>
 
     <script>
@@ -396,10 +582,48 @@
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('./sw-admin.js');
             }
-            await loadPriceOverrides();
-            fetchOrders();
+            await loadProducts(); // Load from Supabase
+            fetchOrders(); // Load orders on start
             renderProducts();
+            initializeFactures();
             setupRealtime();
+
+            // Show migration button if products table is empty (simple check)
+            checkMigrationNeeded();
+        }
+
+        async function checkMigrationNeeded() {
+            const { count, error } = await supabaseClient
+                .from('products')
+                .select('*', { count: 'exact', head: true });
+
+            if (!error && count === 0) {
+                document.getElementById('migrationBtn').style.display = 'block';
+            }
+        }
+
+        function initializeFactures() {
+            let data = JSON.parse(localStorage.getItem('aura_supplier_invoices'));
+            // Re-initialize with correct DT conversions
+            if (!data || !data[0]?.amount_dt) {
+                const initial = [
+                    { supplier: "Amazon US (PanOxyl)", date: "2026-03-05", amount: "10.47", currency: "$", rate: 2.90, amount_dt: "30.36", image: "assets/factures/amazon us/amazon (us).jpg", paid: false, canceled: false },
+                    { supplier: "Amazon US (Vitamin Serum)", date: "2026-03-05", amount: "21.19", currency: "$", rate: 2.90, amount_dt: "61.45", image: "assets/factures/amazon us/amazon(us) (2).jpg", paid: false, canceled: false },
+                    { supplier: "Amazon US (Skin1004)", date: "2026-03-01", amount: "59.20", currency: "$", rate: 2.88, amount_dt: "170.50", image: "assets/factures/amazon us/amazon(us).jpg", paid: false, canceled: false },
+                    { supplier: "Amazon London", date: "2026-02-15", amount: "13.44", currency: "£", rate: 3.88, amount_dt: "52.15", image: "assets/factures/amazon (london).jpg", paid: false, canceled: false },
+                    { supplier: "YesStyle London", date: "2026-02-10", amount: "52.63", currency: "£", rate: 3.88, amount_dt: "204.20", image: "assets/factures/yesstyl (london).jpg", paid: false, canceled: true }
+                ];
+                localStorage.setItem('aura_supplier_invoices', JSON.stringify(initial));
+            } else {
+                let updated = false;
+                data.forEach(f => {
+                    if (f.supplier.includes('YesStyle') && f.canceled === undefined) {
+                        f.canceled = true;
+                        updated = true;
+                    }
+                });
+                if (updated) localStorage.setItem('aura_supplier_invoices', JSON.stringify(data));
+            }
         }
 
         function switchTab(tab) {
@@ -409,62 +633,105 @@
             if (tab === 'orders') {
                 document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
                 document.getElementById('ordersContent').classList.add('active');
-            } else {
+            } else if (tab === 'products') {
                 document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
                 document.getElementById('productsContent').classList.add('active');
                 renderProducts();
+            } else if (tab === 'factures') {
+                document.querySelector('.tab-btn:nth-child(3)').classList.add('active');
+                document.getElementById('facturesContent').classList.add('active');
+                renderFactures();
             }
         }
 
-        // Load any price overrides from Supabase and apply them to productsData
-        async function loadPriceOverrides() {
-            const { data, error } = await supabaseClient
-                .from('product_prices')
-                .select('*');
+        // Load products from Supabase
+        async function loadProducts() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('products')
+                    .select('*')
+                    .order('brand', { ascending: true });
 
-            if (error) {
-                // table doesn't exist yet — that's ok
-                console.warn('product_prices table not found. Prices from products.js will be used.');
-                return;
-            }
+                if (error) throw error;
 
-            if (data) {
-                data.forEach(row => {
-                    for (const brand in productsData) {
-                        const product = productsData[brand].find(p => p.name === row.product_name);
-                        if (product) {
-                            if (row.price) product.price = row.price;
-                            if (row.original_price !== null) product.originalPrice = row.original_price;
-                            // Update sizes if stored
-                            if (row.sizes) {
-                                try {
-                                    product.sizes = JSON.parse(row.sizes);
-                                } catch (e) { }
-                            }
-                        }
-                    }
-                });
+                if (data && data.length > 0) {
+                    // Re-structure flat Supabase data into brands object for UI
+                    const grouped = {};
+                    data.forEach(p => {
+                        if (!grouped[p.brand]) grouped[p.brand] = [];
+                        grouped[p.brand].push(p);
+                    });
+                    // Update the global productsData (this overrides the static one from products.js)
+                    window.productsData = grouped;
+                }
+            } catch (e) {
+                console.error("Error loading products from Supabase", e);
+                // Fallback to static products.js if DB fails
             }
         }
 
-        async function saveProductPrice(productName, newPrice, newOriginalPrice, newSizes) {
-            const payload = {
-                product_name: productName,
-                price: newPrice,
-                original_price: newOriginalPrice || null,
-                sizes: newSizes ? JSON.stringify(newSizes) : null
-            };
+        async function saveProductPrice(productName, newPrice, newOriginalPrice, newSizes, newStatus) {
+            try {
+                const { error } = await supabaseClient
+                    .from('products')
+                    .update({
+                        price: newPrice,
+                        original_price: newOriginalPrice || "",
+                        sizes: newSizes, // Supabase handles JSON arrays directly
+                        status: newStatus || "in-stock"
+                    })
+                    .eq('name', productName);
 
-            const { error } = await supabaseClient
-                .from('product_prices')
-                .upsert(payload, { onConflict: 'product_name' });
-
-            if (error) {
-                alert('Erreur lors de la sauvegarde. Vérifiez que la table "product_prices" existe dans Supabase.');
-                console.error(error);
+                if (error) throw error;
+                return true;
+            } catch (err) {
+                alert('Erreur Supabase: ' + (err.message || 'Erreur inconnue'));
+                console.error(err);
                 return false;
             }
-            return true;
+        }
+
+        async function migrateToSupabase() {
+            if (!confirm("Voulez-vous migrer tous les produits de products.js vers Supabase ? Cela ne doit être fait qu'une fois.")) return;
+
+            const btn = document.getElementById('migrationBtn');
+            const status = document.getElementById('migrationStatus');
+            btn.disabled = true;
+            status.innerText = "Migration en cours...";
+
+            const flatProducts = [];
+            for (const brand in productsData) {
+                productsData[brand].forEach(p => {
+                    flatProducts.push({
+                        brand: brand,
+                        name: p.name,
+                        tagline: p.tagline || "",
+                        description: p.description || "",
+                        price: p.price,
+                        original_price: p.originalPrice || "",
+                        image: p.image,
+                        collection: p.collection || "",
+                        sizes: p.sizes || [],
+                        status: p.status || "in-stock"
+                    });
+                });
+            }
+
+            const { error } = await supabaseClient
+                .from('products')
+                .insert(flatProducts);
+
+            if (error) {
+                alert("Erreur migration: " + error.message);
+                status.innerText = "Erreur !";
+                btn.disabled = false;
+            } else {
+                alert("Migration réussie ! " + flatProducts.length + " produits ajoutés.");
+                status.innerText = "Terminé ✅";
+                btn.style.display = 'none';
+                await loadProducts();
+                renderProducts();
+            }
         }
 
         function renderProducts() {
@@ -494,6 +761,14 @@
                                 </div>
                             </div>
                             <div style="width:100%; padding:10px; background:#f9f9f9; border-radius:10px;">
+                                <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+                                    <span style="color:#555; font-size:0.85rem; min-width:70px;">Statut :</span>
+                                    <select id="status-${productId}" style="width:120px; padding:4px 8px; border:1px solid #ddd; border-radius:6px; font-family:inherit;">
+                                        <option value="in-stock" ${!p.status || p.status === 'in-stock' ? 'selected' : ''}>En Stock</option>
+                                        <option value="out-of-stock" ${p.status === 'out-of-stock' ? 'selected' : ''}>Rupture</option>
+                                        <option value="hidden" ${p.status === 'hidden' ? 'selected' : ''}>Caché</option>
+                                    </select>
+                                </div>
                                 ${p.sizes && p.sizes.length > 0 ? `
                                     <p style="font-size:0.8rem; color:#aaa; margin-bottom:8px;">Prix par taille :</p>
                                     ${sizesHtml}
@@ -541,12 +816,14 @@
 
             const newPrice = document.getElementById(`price-${productId}`)?.value.trim() || p.price;
             const newOriginal = document.getElementById(`orig-${productId}`)?.value.trim() || '';
+            const newStatus = document.getElementById(`status-${productId}`)?.value || 'in-stock';
 
             // Update in-memory
             productsData[brand][pIdx].price = newPrice;
             productsData[brand][pIdx].originalPrice = newOriginal;
+            productsData[brand][pIdx].status = newStatus;
 
-            const ok = await saveProductPrice(p.name, newPrice, newOriginal, newSizes);
+            const ok = await saveProductPrice(p.name, newPrice, newOriginal, newSizes, newStatus);
             if (ok) {
                 const indicator = document.getElementById(`saved-${productId}`);
                 if (indicator) {
@@ -868,6 +1145,163 @@
 
             printWindow.document.write(htmlContent);
             printWindow.document.close();
+        }
+
+        // --- FACTURES MANAGEMENT ---
+        function renderFactures() {
+            const grid = document.getElementById('factureGrid');
+            const data = JSON.parse(localStorage.getItem('aura_supplier_invoices')) || [];
+
+            if (data.length === 0) {
+                grid.innerHTML = '<p style="text-align: center; color: #999; margin-top: 50px; grid-column: 1/-1;">Aucune facture enregistrée.</p>';
+                return;
+            }
+
+            let totalUnpaidDt = 0;
+
+            const cardsHtml = data.map((f, idx) => {
+                if (!f.paid && !f.canceled && f.amount_dt) {
+                    totalUnpaidDt += parseFloat(f.amount_dt);
+                }
+
+                let borderStyle = 'none';
+                if (f.canceled) borderStyle = '2px solid #F44336';
+                else if (f.paid) borderStyle = '2px solid #4CAF50';
+
+                return `
+                <div class="facture-card" style="border: ${borderStyle}; opacity: ${f.canceled ? '0.8' : '1'}; position: relative;">
+                    ${f.canceled ? '<div style="position: absolute; top: 10px; right: 10px; color: #F44336; font-weight: bold; border: 2px solid #F44336; padding: 3px 8px; transform: rotate(10deg); font-size: 0.8rem; background: rgba(255,255,255,0.95); border-radius: 5px; z-index: 5; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">ANNULÉ</div>' : ''}
+                    <button class="btn-delete" onclick="deleteFacture(${idx})" title="Supprimer">✕</button>
+                    <div class="facture-img-container" onclick="showOverlay('${f.image}')">
+                        <img src="${f.image}" class="facture-img" onerror="this.src='logo.png'">
+                    </div>
+                    <div class="facture-info">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 5px;">
+                            <h4>${f.supplier}</h4>
+                            <div style="display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end;">
+                                <button onclick="toggleFacturePaid(${idx})" style="padding: 4px 8px; border-radius: 12px; border: none; font-size: 0.7rem; font-weight: bold; cursor: pointer; background: ${f.paid ? '#4CAF50' : '#eee'}; color: ${f.paid ? 'white' : '#666'};">
+                                    ${f.paid ? 'Payé ✓' : 'Marquer Payé'}
+                                </button>
+                                <button onclick="toggleFactureCanceled(${idx})" style="padding: 4px 8px; border-radius: 12px; border: none; font-size: 0.7rem; font-weight: bold; cursor: pointer; background: ${f.canceled ? '#F44336' : '#eee'}; color: ${f.canceled ? 'white' : '#666'}; margin-top: 4px;">
+                                    ${f.canceled ? 'Annulé ✕' : 'Marquer Annulé'}
+                                </button>
+                            </div>
+                        </div>
+                        <p>📅 ${new Date(f.date).toLocaleDateString('fr-FR')}</p>
+                        ${f.rate ? `<p style="font-size: 0.75rem; color: #aaa;">Taux: 1${f.currency} = ${f.rate} dt</p>` : ''}
+                    </div>
+                    <div class="facture-total" style="text-decoration: ${f.canceled ? 'line-through' : 'none'};">
+                        ${f.amount} ${f.currency}
+                        ${f.amount_dt ? `<span style="display: block; font-size: 1.2rem; color: ${f.canceled ? '#999' : 'var(--primary)'}; margin-top: 4px;">≈ ${f.amount_dt} dt</span>` : ''}
+                    </div>
+                </div>
+            `}).join('');
+
+            const totalHtml = `
+                <div style="grid-column: 1/-1; background: var(--secondary); color: white; padding: 20px; border-radius: 15px; margin-top: 25px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                    <h3 style="margin: 0; font-size: 1.2rem; font-weight: 500;">Total Restant à Payer</h3>
+                    <div style="font-size: 1.8rem; font-weight: 800;">${totalUnpaidDt.toFixed(2)} dt</div>
+                </div>
+            `;
+
+            grid.innerHTML = cardsHtml + totalHtml;
+        }
+
+        function toggleFactureForm() {
+            const form = document.getElementById('factureForm');
+            form.style.display = form.style.display === 'block' ? 'none' : 'block';
+        }
+
+        async function handleSaveFacture() {
+            const supplier = document.getElementById('fac_supplier').value;
+            const date = document.getElementById('fac_date').value;
+            const amount = document.getElementById('fac_amount').value;
+            const currency = document.getElementById('fac_currency').value;
+            const rateInput = document.getElementById('fac_rate').value;
+            const imgInput = document.getElementById('fac_image');
+
+            if (!supplier || !date || !amount) {
+                alert("Veuillez remplir tous les champs");
+                return;
+            }
+
+            let imagePath = 'logo.png';
+            if (imgInput.files && imgInput.files[0]) {
+                const file = imgInput.files[0];
+                imagePath = 'assets/factures/' + file.name;
+            }
+
+            let amountDt = '';
+            let parsedRate = parseFloat(rateInput);
+            if (!isNaN(parsedRate) && parsedRate > 0) {
+                const parsedAmount = parseFloat(amount.replace(',', '.'));
+                if (!isNaN(parsedAmount)) {
+                    amountDt = (parsedAmount * parsedRate).toFixed(2);
+                }
+            }
+
+            const newFacture = {
+                supplier,
+                date,
+                amount,
+                currency,
+                rate: rateInput || '',
+                amount_dt: amountDt,
+                image: imagePath,
+                paid: false,
+                canceled: false
+            };
+
+            const data = JSON.parse(localStorage.getItem('aura_supplier_invoices')) || [];
+            data.unshift(newFacture);
+            localStorage.setItem('aura_supplier_invoices', JSON.stringify(data));
+
+            toggleFactureForm();
+            renderFactures();
+
+            // Reset form
+            document.getElementById('fac_supplier').value = '';
+            document.getElementById('fac_date').value = '';
+            document.getElementById('fac_amount').value = '';
+            document.getElementById('fac_rate').value = '';
+            document.getElementById('fac_image').value = '';
+        }
+
+        function toggleFacturePaid(idx) {
+            const data = JSON.parse(localStorage.getItem('aura_supplier_invoices')) || [];
+            if (data[idx]) {
+                data[idx].paid = !data[idx].paid;
+                // Si payé, on décochce annulé
+                if (data[idx].paid) data[idx].canceled = false;
+                localStorage.setItem('aura_supplier_invoices', JSON.stringify(data));
+                renderFactures();
+            }
+        }
+
+        function toggleFactureCanceled(idx) {
+            const data = JSON.parse(localStorage.getItem('aura_supplier_invoices')) || [];
+            if (data[idx]) {
+                data[idx].canceled = !data[idx].canceled;
+                // Si annulé, on décochce payé
+                if (data[idx].canceled) data[idx].paid = false;
+                localStorage.setItem('aura_supplier_invoices', JSON.stringify(data));
+                renderFactures();
+            }
+        }
+
+        function deleteFacture(idx) {
+            if (!confirm("Supprimer cette facture ?")) return;
+            const data = JSON.parse(localStorage.getItem('aura_supplier_invoices')) || [];
+            data.splice(idx, 1);
+            localStorage.setItem('aura_supplier_invoices', JSON.stringify(data));
+            renderFactures();
+        }
+
+        function showOverlay(src) {
+            const overlay = document.getElementById('imgOverlay');
+            const img = document.getElementById('overlayImg');
+            img.src = src;
+            overlay.style.display = 'flex';
         }
 
         function updateStats(orders) {

@@ -77,6 +77,57 @@
             margin-bottom: 20px;
         }
 
+        /* 0. LOADING SCREEN (For DB fetch) */
+        #shopLoader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: #f8c3c8;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .loader-dots {
+            display: flex;
+            gap: 10px;
+        }
+
+        .dot {
+            width: 15px;
+            height: 15px;
+            background: #fff;
+            border-radius: 50%;
+            animation: dotWave 1.2s infinite ease-in-out;
+        }
+
+        .dot:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .dot:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        @keyframes dotWave {
+
+            0%,
+            100% {
+                transform: translateY(0);
+                opacity: 0.3;
+            }
+
+            50% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+
         .btn-entrer {
             position: absolute;
             bottom: 50px;
@@ -364,6 +415,22 @@
             height: 90%;
             object-fit: contain;
             transition: transform 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .out-of-stock-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: #8b4a50;
+            color: #fff;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.70rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            z-index: 10;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
 
         .product-card:hover .product-image {
@@ -1242,39 +1309,47 @@
             }
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Load price overrides from Supabase and patch productsData on arrival
-        (async () => {
+        // Load price overrides from localStorage and patch productsData on arrival
+        (function () {
             try {
-                const sb = supabase.createClient(
-                    'https://tthnppyrrjfbmfjnfqnq.supabase.co',
-                    'sb_publishable_8r46Ru1eCBhchCdhzM3hsg_TC_5vZz3'
-                );
-                const { data } = await sb.from('product_prices').select('*');
-                if (data && data.length > 0) {
-                    data.forEach(row => {
-                        for (const brand in productsData) {
-                            const product = productsData[brand].find(p => p.name === row.product_name);
-                            if (product) {
-                                if (row.price) product.price = row.price;
-                                if (row.original_price !== undefined) product.originalPrice = row.original_price || '';
-                                if (row.sizes) {
-                                    try { product.sizes = JSON.parse(row.sizes); } catch (e) { }
-                                }
+                const storedPrices = JSON.parse(localStorage.getItem('aura_product_prices')) || {};
+
+                for (const productName in storedPrices) {
+                    const row = storedPrices[productName];
+                    for (const brand in productsData) {
+                        const product = productsData[brand].find(p => p.name === productName);
+                        if (product) {
+                            if (row.price) product.price = row.price;
+                            if (row.original_price !== undefined) product.originalPrice = row.original_price || '';
+                            if (row.status !== undefined) product.status = row.status;
+                            if (row.sizes) {
+                                try { product.sizes = JSON.parse(row.sizes); } catch (e) { }
                             }
                         }
-                    });
+                    }
                 }
             } catch (e) {
                 // Fail silently — fall back to products.js prices
-                console.warn('Could not load price overrides:', e);
+                console.warn('Could not load local price overrides:', e);
             }
         })();
     </script>
 </head>
 
 <body>
+
+    <!-- Loading Overlay -->
+    <div id="shopLoader">
+        <img src="logo.png" style="width: 120px; margin-bottom: 30px; opacity: 0.8;">
+        <div class="loader-dots">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+        <p style="margin-top: 20px; color: #8b4a50; font-weight: 600; font-size: 0.9rem; letter-spacing: 1px;">PREPARING
+            YOUR AURA...</p>
+    </div>
 
     <!-- LANDING SCREEN -->
     <div class="landing-screen">
@@ -1504,31 +1579,15 @@
 
         let allProducts = [];
 
-        // Flatten products on load for easier searching
-        function initializeSearchIndex() {
-            try {
-                if (typeof productsData === 'undefined') {
-                    console.error("productsData is not defined. Check products.js loading.");
-                    return;
-                }
-                allProducts = [];
-                Object.keys(productsData).forEach(brand => {
-                    if (Array.isArray(productsData[brand])) {
-                        productsData[brand].forEach((product, index) => {
-                            allProducts.push({
-                                ...product,
-                                brand: brand,
-                                originalIndex: index
-                            });
-                        });
-                    }
+        function rebuildSearchIndex() {
+            allProducts = [];
+            for (const brand in productsData) {
+                productsData[brand].forEach((p, idx) => {
+                    allProducts.push({ ...p, brand, originalIndex: idx });
                 });
-                console.log("Search index initialized with", allProducts.length, "products");
-            } catch (e) {
-                console.error("Error initializing search index:", e);
             }
+            console.log("Search index rebuilt with", allProducts.length, "products");
         }
-        initializeSearchIndex();
 
         function toggleSearch() {
             if (searchOverlay.classList.contains('open')) {
@@ -1547,6 +1606,8 @@
         if (searchBtn) searchBtn.addEventListener('click', toggleSearch);
         if (closeSearchBtn) closeSearchBtn.addEventListener('click', toggleSearch);
 
+        // Search event listener below...
+
         searchInput.addEventListener('input', (e) => {
             const query = e.target.value.toLowerCase();
             if (query.length < 2) {
@@ -1556,8 +1617,8 @@
 
             const results = allProducts.filter(p =>
                 p.name.toLowerCase().includes(query) ||
-                p.tagline.toLowerCase().includes(query) ||
-                p.brand.toLowerCase().includes(query)
+                (p.tagline && p.tagline.toLowerCase().includes(query)) ||
+                (p.brand && p.brand.toLowerCase().includes(query))
             );
             renderSearchResults(results);
         });
@@ -1592,8 +1653,22 @@
                     sizeButtonsHtml += `</div>`;
                 }
 
+                // If product is hidden, do not render it in search results
+                if (product.status === 'hidden') return;
+
+                let badgeHtml = '';
+                let disableButton = '';
+                let buttonText = 'Add to Cart';
+
+                if (product.status === 'out-of-stock') {
+                    badgeHtml = `<div class="out-of-stock-badge">Rupture</div>`;
+                    disableButton = 'disabled style="background-color: #ccc; color: #fff; cursor: not-allowed; box-shadow: none; transform: none;"';
+                    buttonText = 'Indisponible';
+                }
+
                 card.innerHTML = `
                     <div class="product-image-container">
+                        ${badgeHtml}
                         <img src="${product.image}" alt="${product.name}" class="product-image" onerror="this.src='logo.png'">
                     </div>
                     <div class="product-info">
@@ -1605,23 +1680,25 @@
                             <span class="product-price">${product.price}</span>
                             <span class="product-original-price">${product.originalPrice}</span>
                         </div>
-                        <button class="btn-buy" id="search-buy-${product.brand}-${product.originalIndex}">Add to Cart</button>
+                        <button class="btn-buy" id="search-buy-${product.brand}-${product.originalIndex}" ${disableButton}>${buttonText}</button>
                     </div>
                 `;
                 searchResultsGrid.appendChild(card);
 
                 // Add to Cart Listener
                 const buyBtn = card.querySelector(`.btn-buy`);
-                buyBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    // Find active size
-                    let sizeIdx = null;
-                    const activeSizeBtn = card.querySelector('.size-btn.active');
-                    if (activeSizeBtn) {
-                        sizeIdx = parseInt(activeSizeBtn.getAttribute('data-size-index'));
-                    }
-                    addToCart(product.originalIndex, sizeIdx, product.brand);
-                });
+                if (product.status !== 'out-of-stock') {
+                    buyBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        // Find active size
+                        let sizeIdx = null;
+                        const activeSizeBtn = card.querySelector('.size-btn.active');
+                        if (activeSizeBtn) {
+                            sizeIdx = parseInt(activeSizeBtn.getAttribute('data-size-index'));
+                        }
+                        addToCart(product.originalIndex, sizeIdx, product.brand);
+                    });
+                }
             });
 
             // Size Button Listeners for Search
@@ -1782,8 +1859,22 @@
                     sizeButtonsHtml += `</div>`;
                 }
 
+                // If product is hidden, do not render it in regular grid
+                if (product.status === 'hidden') return;
+
+                let badgeHtml = '';
+                let disableButton = '';
+                let buttonText = 'Add to Cart';
+
+                if (product.status === 'out-of-stock') {
+                    badgeHtml = `<div class="out-of-stock-badge">Rupture</div>`;
+                    disableButton = 'disabled style="background-color: #ccc; color: #fff; cursor: not-allowed; box-shadow: none; transform: none;"';
+                    buttonText = 'Indisponible';
+                }
+
                 card.innerHTML = `
                     <div class="product-image-container">
+                        ${badgeHtml}
                         <img src="${product.image}" alt="${product.name}" class="product-image" onerror="this.src='logo.png'">
                     </div>
                     <div class="product-info">
@@ -1794,21 +1885,23 @@
                             <span class="product-price">${product.price}</span>
                             <span class="product-original-price">${product.originalPrice}</span>
                         </div>
-                        <button class="btn-buy" id="buy-btn-${index}">Add to Cart</button>
+                        <button class="btn-buy" id="buy-btn-${index}" ${disableButton}>${buttonText}</button>
                     </div>
                 `;
                 productGrid.appendChild(card);
 
                 const buyBtn = card.querySelector(`#buy-btn-${index}`);
-                buyBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    let sizeIdx = null;
-                    const activeSizeBtn = card.querySelector('.size-btn.active');
-                    if (activeSizeBtn) {
-                        sizeIdx = parseInt(activeSizeBtn.getAttribute('data-size-index'));
-                    }
-                    addToCart(index, sizeIdx, brandKey);
-                });
+                if (product.status !== 'out-of-stock') {
+                    buyBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        let sizeIdx = null;
+                        const activeSizeBtn = card.querySelector('.size-btn.active');
+                        if (activeSizeBtn) {
+                            sizeIdx = parseInt(activeSizeBtn.getAttribute('data-size-index'));
+                        }
+                        addToCart(index, sizeIdx, brandKey);
+                    });
+                }
 
                 // Price update logic for sizes
                 const sizeBtns = card.querySelectorAll('.size-btn');
@@ -2062,7 +2155,59 @@
         });
 
         window.addEventListener('hashchange', handleRouting);
-        window.addEventListener('load', handleRouting);
+        // window.addEventListener('load', handleRouting); // Replaced by loadDynamicProducts
+
+        // --- DYNAMIC DATA LOADING (Supabase) ---
+        async function loadDynamicProducts() {
+            const loader = document.getElementById('shopLoader');
+            try {
+                const { data, error } = await supabaseClient
+                    .from('products')
+                    .select('*')
+                    .order('brand', { ascending: true });
+
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    const grouped = {};
+                    data.forEach(p => {
+                        const brand = p.brand;
+                        if (!grouped[brand]) grouped[brand] = [];
+
+                        // Map Supabase columns back to the frontend expected keys if they differ
+                        grouped[brand].push({
+                            name: p.name,
+                            tagline: p.tagline,
+                            description: p.description,
+                            price: p.price,
+                            originalPrice: p.original_price, // map snake_case to camelCase
+                            image: p.image,
+                            collection: p.collection,
+                            sizes: p.sizes || [],
+                            status: p.status
+                        });
+                    });
+                    // Global variable override
+                    window.productsData = grouped;
+                    console.log("Supabase products loaded:", Object.keys(grouped).length, "brands");
+                }
+            } catch (err) {
+                console.error("Migration fallback: loading static products.js", err);
+                // Keep the static productsData if Supabase fails
+            } finally {
+                rebuildSearchIndex();
+                handleRouting(); // Only route after we have data
+
+                // Fade out loader
+                if (loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.style.display = 'none', 500);
+                }
+            }
+        }
+
+        // Trigger loading
+        loadDynamicProducts();
 
         // --- CHECKOUT LOGIC ---
         const checkoutOverlay = document.getElementById('checkoutOverlay');
