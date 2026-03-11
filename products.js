@@ -1,4 +1,4 @@
-const productsData = {
+var productsData = {
     "COSRX": [
         {
             name: "Advanced Snail 96 Mucin Power Essence",

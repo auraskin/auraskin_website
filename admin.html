@@ -36,6 +36,9 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #fecdd3;
+            /* Subtle pink line instead of any thick red one */
         }
 
         .header h1 {
@@ -90,6 +93,14 @@
 
         .order-card:active {
             transform: scale(0.98);
+        }
+
+        .product-card input:focus,
+        .product-card select:focus {
+            outline: none;
+            border-color: var(--secondary) !important;
+            box-shadow: 0 0 0 3px rgba(139, 74, 80, 0.1);
+            background: #fff !important;
         }
 
         .order-header {
@@ -294,6 +305,86 @@
         }
 
         .facture-img-container {
+            overflow: hidden;
+        }
+
+        /* Product Section Styles */
+        .product-section {
+            margin-bottom: 40px;
+        }
+
+        .product-section-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #fecdd3;
+        }
+
+        .product-section-header h3 {
+            font-size: 1.1rem;
+            color: var(--secondary);
+            font-weight: 700;
+        }
+
+        .product-count-badge {
+            background: var(--primary);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .add-product-form {
+            background: #fff;
+            padding: 25px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+            display: none;
+            border: 2px solid #fdf2f3;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #666;
+            margin-left: 5px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 12px 15px;
+            border-radius: 12px;
+            border: 1.5px solid #eee;
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+            background: #fffafa;
+            outline: none;
+        }
+
+        .facture-img-container {
             width: 100%;
             height: 180px;
             border-radius: 15px;
@@ -481,16 +572,91 @@
     </div>
 
     <div id="productsContent" class="tab-content">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h2 style="font-size: 1.2rem; color: var(--secondary);">Gestion des Produits</h2>
-            <div style="display: flex; gap: 10px;">
-                <button class="btn-status" id="migrationBtn" onclick="migrateToSupabase()"
-                    style="background: var(--primary); font-size: 0.7rem; display: none;">🚀 Migrer vers DB</button>
-                <div id="migrationStatus" style="font-size: 0.7rem; color: #999; align-self: center;"></div>
+        <div id="migrationSection"
+            style="display:none; background: #fff5f6; padding: 25px; border-radius: 20px; border: 2.5px dashed var(--primary); margin-bottom: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
+            <h3 style="color: var(--secondary); margin-bottom: 15px; font-size: 1.1rem;">🚀 Initialisation de la base de
+                données</h3>
+            <p style="margin-bottom: 20px; font-size: 0.9rem; line-height: 1.5;">Il semble que votre base de données
+                Supabase soit vide ou mal synchronisée. Cette étape est nécessaire pour que vos changements de prix
+                fonctionnent.</p>
+            <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                <button id="migrationBtn" onclick="migrateToSupabase()" class="btn-status"
+                    style="width: auto; padding: 12px 30px; font-size: 1rem; background: var(--primary); border: none; color: white; border-radius: 50px; cursor: pointer; font-weight: 700;">🚀
+                    Migrer vers DB</button>
+                <button onclick="forceResetMigration()"
+                    style="background: none; border: 1px solid #ccc; color: #999; padding: 8px 15px; border-radius: 20px; font-size: 0.75rem; cursor: pointer;">⚠️
+                    Tout effacer and Re-migrer</button>
+                <div id="migrationStatus" style="font-size: 0.8rem; color: #999;"></div>
             </div>
         </div>
-        <div class="order-list" id="productList">
-            <!-- Products will be rendered here -->
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="font-size: 1.2rem; color: var(--secondary);">Gestion des Produits</h2>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button onclick="checkMigrationNeeded()"
+                    style="background: none; border: none; color: var(--primary); cursor: pointer; font-size: 0.8rem; text-decoration: underline;">🔄
+                    Statut base</button>
+            </div>
+        </div>
+
+        <!-- Add Product Form (Dynamic) -->
+        <div id="productForm" class="add-product-form">
+            <h3 id="formTitle" style="margin-bottom: 20px; color: var(--secondary);">✨ Nouveau Produit</h3>
+
+            <div id="publicFields">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Marque</label>
+                        <input type="text" id="p_brand" placeholder="ex: COSRX">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nom du produit</label>
+                    <input type="text" id="p_name" placeholder="ex: Snail Mucin Essence">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Prix (ex: 85dt)</label>
+                    <input type="text" id="p_price" placeholder="85dt">
+                </div>
+                <div id="originalPriceField" class="form-group">
+                    <label>Prix d'origine (optionnel)</label>
+                    <input type="text" id="p_original" placeholder="110dt">
+                </div>
+            </div>
+
+            <div id="typeField" class="form-row">
+                <div class="form-group">
+                    <label>Type / Collection</label>
+                    <input type="text" id="p_collection" placeholder="ex: Centella">
+                </div>
+            </div>
+
+            <input type="hidden" id="p_visibility">
+
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label>URL de l'image (optionnel)</label>
+                <input type="text" id="p_image" placeholder="assets/products/image.png">
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Petite description (Tagline)</label>
+                <input type="text" id="p_tagline" placeholder="ex: Hydratation intense pour peau sensible">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-status" id="submitBtn" onclick="addNewProduct()" style="flex: 2;">🚀 Créer le
+                    produit</button>
+                <button class="btn-status" onclick="closeProductForm()"
+                    style="flex: 1; background: #eee; color: #666;">Annuler</button>
+            </div>
+        </div>
+
+        <div id="productList">
+            <!-- Sections will be rendered here dynamically -->
         </div>
     </div>
 
@@ -593,12 +759,18 @@
         }
 
         async function checkMigrationNeeded() {
-            const { count, error } = await supabaseClient
-                .from('products')
-                .select('*', { count: 'exact', head: true });
+            try {
+                const { count, error } = await supabaseClient
+                    .from('products')
+                    .select('*', { count: 'exact', head: true });
 
-            if (!error && count === 0) {
-                document.getElementById('migrationBtn').style.display = 'block';
+                if (!error && count === 0) {
+                    document.getElementById('migrationSection').style.display = 'block';
+                } else {
+                    document.getElementById('migrationSection').style.display = 'none';
+                }
+            } catch (e) {
+                console.error("Migration check failed", e);
             }
         }
 
@@ -655,34 +827,61 @@
                 if (error) throw error;
 
                 if (data && data.length > 0) {
-                    // Re-structure flat Supabase data into brands object for UI
-                    const grouped = {};
                     data.forEach(p => {
-                        if (!grouped[p.brand]) grouped[p.brand] = [];
-                        grouped[p.brand].push(p);
+                        // Case-insensitive brand matching
+                        const brandKey = Object.keys(productsData).find(k => k.toLowerCase() === p.brand.toLowerCase()) || p.brand;
+
+                        if (!productsData[brandKey]) productsData[brandKey] = [];
+
+                        // Try to find by ID first (most reliable), then by name
+                        let exists = productsData[brandKey].find(existing => existing.id === p.id);
+                        if (!exists) {
+                            exists = productsData[brandKey].find(existing => existing.name === p.name);
+                        }
+
+                        // Map Supabase fields to frontend fields
+                        const mappedProduct = {
+                            ...p,
+                            originalPrice: p.original_price // Map snake_case to camelCase
+                        };
+
+                        if (exists) {
+                            Object.assign(exists, mappedProduct);
+                        } else {
+                            productsData[brandKey].push(mappedProduct);
+                        }
                     });
-                    // Update the global productsData (this overrides the static one from products.js)
-                    window.productsData = grouped;
                 }
             } catch (e) {
                 console.error("Error loading products from Supabase", e);
-                // Fallback to static products.js if DB fails
             }
         }
 
-        async function saveProductPrice(productName, newPrice, newOriginalPrice, newSizes, newStatus) {
+        async function saveProductPrice(productName, newPrice, newOriginalPrice, newSizes, newStatus, productId = null) {
             try {
-                const { error } = await supabaseClient
-                    .from('products')
-                    .update({
-                        price: newPrice,
-                        original_price: newOriginalPrice || "",
-                        sizes: newSizes, // Supabase handles JSON arrays directly
-                        status: newStatus || "in-stock"
-                    })
-                    .eq('name', productName);
+                const updateData = {
+                    price: newPrice,
+                    original_price: newOriginalPrice || "",
+                    sizes: newSizes,
+                    status: newStatus || "in-stock"
+                };
+
+                let query = supabaseClient.from('products').update(updateData, { count: 'exact' });
+
+                if (productId) {
+                    query = query.eq('id', productId);
+                } else {
+                    query = query.eq('name', productName);
+                }
+
+                const { data, error, count } = await query;
 
                 if (error) throw error;
+
+                if (count === 0) {
+                    alert("Attention: Le produit '" + productName + "' n'existe pas dans la base de données. Avez-vous cliqué sur 'Migrer vers DB' ?");
+                    return false;
+                }
                 return true;
             } catch (err) {
                 alert('Erreur Supabase: ' + (err.message || 'Erreur inconnue'));
@@ -700,8 +899,9 @@
             status.innerText = "Migration en cours...";
 
             const flatProducts = [];
-            for (const brand in productsData) {
-                productsData[brand].forEach(p => {
+            const pData = window.productsData || productsData;
+            for (const brand in pData) {
+                pData[brand].forEach(p => {
                     flatProducts.push({
                         brand: brand,
                         name: p.name,
@@ -726,79 +926,275 @@
                 status.innerText = "Erreur !";
                 btn.disabled = false;
             } else {
-                alert("Migration réussie ! " + flatProducts.length + " produits ajoutés.");
-                status.innerText = "Terminé ✅";
-                btn.style.display = 'none';
+                document.getElementById('migrationSection').style.display = 'none';
+                alert("Migration terminée avec succès !");
+                fetchOrders();
+                loadProducts();
+            }
+        }
+
+        function toggleProductForm(mode) {
+            const form = document.getElementById('productForm');
+            const title = document.getElementById('formTitle');
+            const publicFields = document.getElementById('publicFields');
+            const originalPriceField = document.getElementById('originalPriceField');
+            const typeField = document.getElementById('typeField');
+            const visibilityInput = document.getElementById('p_visibility');
+
+            if (mode === 'public') {
+                title.innerHTML = '✨ Nouveau Produit en Ligne';
+                publicFields.style.display = 'block';
+                originalPriceField.style.display = 'block';
+                typeField.style.display = 'block';
+                visibilityInput.value = 'in-stock';
+            } else {
+                title.innerHTML = '📦 Nouveau Produit Interne';
+                publicFields.style.display = 'none';
+                originalPriceField.style.display = 'none';
+                typeField.style.display = 'none';
+                visibilityInput.value = 'hidden';
+                // Set default values for hidden fields
+                document.getElementById('p_brand').value = 'Interne';
+                document.getElementById('p_collection').value = 'Interne';
+            }
+
+            form.style.display = 'block';
+            form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function closeProductForm() {
+            document.getElementById('productForm').style.display = 'none';
+        }
+
+        async function addNewProduct() {
+            const status = document.getElementById('p_visibility').value;
+            const name = document.getElementById('p_name').value.trim();
+            const price = document.getElementById('p_price').value.trim();
+
+            // Required for all
+            if (!name || !price) {
+                alert("Veuillez remplir au moins le nom et le prix.");
+                return;
+            }
+
+            // Required only for Public
+            let brand = "Interne";
+            let collection = "Interne";
+            let originalPrice = "";
+
+            if (status === 'in-stock') {
+                brand = document.getElementById('p_brand').value.trim();
+                collection = document.getElementById('p_collection').value.trim();
+                originalPrice = document.getElementById('p_original').value.trim();
+
+                if (!brand) {
+                    alert("Veuillez remplir la marque pour un produit en ligne.");
+                    return;
+                }
+            }
+
+            const image = document.getElementById('p_image').value.trim() || 'logo.png';
+            const tagline = document.getElementById('p_tagline').value.trim();
+
+            // Ensure price has 'dt'
+            const formattedPrice = price.toLowerCase().includes('dt') ? price.toLowerCase() : price + 'dt';
+            const formattedOriginal = originalPrice ? (originalPrice.toLowerCase().includes('dt') ? originalPrice.toLowerCase() : originalPrice + 'dt') : '';
+
+            const newProduct = {
+                brand,
+                name,
+                price: formattedPrice,
+                original_price: formattedOriginal,
+                collection,
+                image,
+                tagline,
+                description: tagline,
+                status,
+                sizes: []
+            };
+
+            const btn = document.getElementById('submitBtn');
+            const originalText = btn.innerText;
+            btn.innerText = "Création...";
+            btn.disabled = true;
+
+            try {
+                const { error } = await supabaseClient
+                    .from('products')
+                    .insert([newProduct]);
+
+                if (error) throw error;
+
+                alert("Produit ajouté avec succès !");
+                closeProductForm();
+
+                // Clear form
+                document.getElementById('p_brand').value = '';
+                document.getElementById('p_name').value = '';
+                document.getElementById('p_price').value = '';
+                document.getElementById('p_original').value = '';
+                document.getElementById('p_collection').value = '';
+                document.getElementById('p_image').value = '';
+                document.getElementById('p_tagline').value = '';
+
+                // Refresh list
                 await loadProducts();
                 renderProducts();
+                fetchOrders(); // Refresh order dropdowns to show the new product
+            } catch (e) {
+                console.error("Error adding product", e);
+                alert("Erreur lors de l'ajout: " + e.message);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        async function forceResetMigration() {
+            if (!confirm("⚠️ DANGER : Cela va effacer TOUS les produits de la base de données pour recommencer la migration à zéro. Utilisez ceci si vos produits ne se sauvegardent pas. Continuer ?")) return;
+
+            const btn = document.getElementById('migrationBtn');
+            const status = document.getElementById('migrationStatus');
+            status.innerText = "Nettoyage de la base...";
+
+            try {
+                // Delete all products
+                const { error: delError } = await supabaseClient
+                    .from('products')
+                    .delete()
+                    .neq('brand', '___NON_EXISTENT___');
+
+                if (delError) throw delError;
+
+                // Release formatting and run normal migration
+                document.getElementById('migrationSection').style.display = 'block';
+                btn.disabled = false;
+                await migrateToSupabase();
+            } catch (err) {
+                alert("Erreur lors du nettoyage : " + err.message);
+                console.error(err);
             }
         }
 
         function renderProducts() {
             const list = document.getElementById('productList');
-            list.innerHTML = Object.keys(productsData).map(brand => {
-                const brandProducts = productsData[brand].map((p, pIdx) => {
+            if (!list) return;
+            const pData = productsData;
+
+            // Separate products
+            const publicProducts = [];
+            const internalProducts = [];
+
+            Object.keys(pData).forEach(brand => {
+                pData[brand].forEach((p, pIdx) => {
+                    const productWithMeta = { ...p, brand, pIdx };
+                    if (p.status === 'hidden') {
+                        internalProducts.push(productWithMeta);
+                    } else {
+                        publicProducts.push(productWithMeta);
+                    }
+                });
+            });
+
+            const renderSection = (title, products, icon, emptyMsg, mode) => {
+                const headerContent = `
+                    <div class="product-section-header">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <h3>${icon} ${title}</h3>
+                            <span class="product-count-badge">${products.length}</span>
+                        </div>
+                        <button class="btn-add-item" onclick="toggleProductForm('${mode}')" 
+                            style="margin-top:0; background:var(--secondary); color:white; border:none; padding:6px 15px;">
+                            + Ajouter
+                        </button>
+                    </div>
+                `;
+
+                if (products.length === 0) {
+                    return `
+                        <div class="product-section">
+                            ${headerContent}
+                            <p style="text-align: center; color: #999; padding: 20px;">${emptyMsg}</p>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="product-section">
+                        ${headerContent}
+                        <div class="order-list">
+                            ${products.map(p => {
+                    const brand = p.brand;
+                    const pIdx = p.pIdx;
                     const productId = `${brand}-${pIdx}`.replace(/[^a-z0-9]/gi, '_');
 
                     const sizesHtml = p.sizes && p.sizes.length > 0
                         ? p.sizes.map((s, sIdx) => `
-                            <div style="display:flex; gap:8px; align-items:center; margin-bottom:5px;">
-                                <span style="min-width:50px; color:#777; font-size:0.85rem;">${s.label}:</span>
-                                <input type="text" id="size-price-${productId}-${sIdx}"
-                                    value="${s.price}"
-                                    style="width:80px; padding:4px 8px; border:1px solid #ddd; border-radius:6px; font-family:inherit;">
-                            </div>
-                        `).join('')
+                                        <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+                                            <span style="min-width:60px; color:#777; font-size:0.85rem;">${s.label}:</span>
+                                            <input type="text" id="size-price-${productId}-${sIdx}"
+                                                value="${s.price}"
+                                                placeholder="ex: 85dt"
+                                                style="flex:1; max-width:120px; padding:8px 12px; border:1.5px solid #eee; border-radius:10px; font-family:inherit; pointer-events: auto;">
+                                        </div>
+                                    `).join('')
                         : '';
 
                     return `
-                        <div class="product-card" style="flex-direction:column; align-items:flex-start; gap:10px;">
-                            <div style="display:flex; gap:12px; align-items:center; width:100%;">
-                                <img src="${p.image}" class="product-img" onerror="this.src='logo.png'">
-                                <div class="product-info">
-                                    <h5>${p.name}</h5>
-                                    <p style="color:#999; font-size:0.8rem;">${brand}${p.collection ? ` · ${p.collection}` : ''}</p>
-                                </div>
-                            </div>
-                            <div style="width:100%; padding:10px; background:#f9f9f9; border-radius:10px;">
-                                <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
-                                    <span style="color:#555; font-size:0.85rem; min-width:70px;">Statut :</span>
-                                    <select id="status-${productId}" style="width:120px; padding:4px 8px; border:1px solid #ddd; border-radius:6px; font-family:inherit;">
-                                        <option value="in-stock" ${!p.status || p.status === 'in-stock' ? 'selected' : ''}>En Stock</option>
-                                        <option value="out-of-stock" ${p.status === 'out-of-stock' ? 'selected' : ''}>Rupture</option>
-                                        <option value="hidden" ${p.status === 'hidden' ? 'selected' : ''}>Caché</option>
-                                    </select>
-                                </div>
-                                ${p.sizes && p.sizes.length > 0 ? `
-                                    <p style="font-size:0.8rem; color:#aaa; margin-bottom:8px;">Prix par taille :</p>
-                                    ${sizesHtml}
-                                ` : `
-                                    <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
-                                        <span style="color:#555; font-size:0.85rem; min-width:70px;">Prix :</span>
-                                        <input type="text" id="price-${productId}"
-                                            value="${p.price}"
-                                            style="width:90px; padding:4px 8px; border:1px solid #ddd; border-radius:6px; font-family:inherit;">
+                                    <div class="product-card" style="flex-direction:column; align-items:flex-start; gap:12px; padding:20px;">
+                                        <div style="display:flex; gap:15px; align-items:center; width:100%;">
+                                            <img src="${p.image}" class="product-img" onerror="this.src='logo.png'" style="width:60px; height:60px;">
+                                            <div class="product-info">
+                                                <h5 style="font-size:1rem; margin-bottom:4px;">${p.name}</h5>
+                                                <p style="color:#999; font-size:0.8rem;">${brand}${p.collection ? ` · ${p.collection}` : ''}</p>
+                                            </div>
+                                        </div>
+                                        <div style="width:100%; padding:15px; background:#fdf2f3; border-radius:15px; border: 1px solid #fee2e2;">
+                                            <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px;">
+                                                <span style="color:#555; font-size:0.85rem; min-width:80px; font-weight:600;">Statut :</span>
+                                                <select id="status-${productId}" 
+                                                    style="flex:1; max-width:150px; padding:8px 12px; border:1.5px solid #eee; border-radius:10px; font-family:inherit; background: white; pointer-events: auto;">
+                                                    <option value="in-stock" ${!p.status || p.status === 'in-stock' ? 'selected' : ''}>En Ligne</option>
+                                                    <option value="out-of-stock" ${p.status === 'out-of-stock' ? 'selected' : ''}>Rupture</option>
+                                                    <option value="hidden" ${p.status === 'hidden' ? 'selected' : ''}>Interne</option>
+                                                </select>
+                                            </div>
+                                            ${p.sizes && p.sizes.length > 0 ? `
+                                                <p style="font-size:0.8rem; color:#8b4a50; font-weight:700; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px;">Prix par taille :</p>
+                                                ${sizesHtml}
+                                            ` : `
+                                                <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
+                                                    <span style="color:#555; font-size:0.85rem; min-width:80px; font-weight:600;">Prix :</span>
+                                                    <input type="text" id="price-${productId}"
+                                                        value="${p.price}"
+                                                        placeholder="ex: 85dt"
+                                                        style="flex:1; max-width:150px; padding:8px 12px; border:1.5px solid #eee; border-radius:10px; font-family:inherit; pointer-events: auto;">
+                                                </div>
+                                                <div style="display:flex; gap:10px; align-items:center;">
+                                                    <span style="color:#999; font-size:0.85rem; min-width:80px; font-weight:600;">Barré :</span>
+                                                    <input type="text" id="orig-${productId}"
+                                                        value="${p.originalPrice || ''}"
+                                                        placeholder="(aucun)"
+                                                        style="flex:1; max-width:150px; padding:8px 12px; border:1.5px solid #eee; border-radius:10px; font-family:inherit; color:#999; pointer-events: auto;">
+                                                </div>
+                                            `}
+                                            <button onclick="handleSavePrice('${brand}', ${pIdx}, '${productId}')"
+                                                class="btn-status" style="width:100%; margin-top:15px; background:var(--secondary); font-size:0.9rem; padding:12px; box-shadow: 0 4px 10px rgba(139, 74, 80, 0.2);">💾 Sauvegarder</button>
+                                            <div id="saved-${productId}" style="display:none; color:#2e7d32; font-size:0.85rem; margin-top:10px; text-align:center; width:100%; font-weight:700;">✓ Changements enregistrés !</div>
+                                        </div>
                                     </div>
-                                    <div style="display:flex; gap:8px; align-items:center;">
-                                        <span style="color:#aaa; font-size:0.85rem; min-width:70px;">Barré :</span>
-                                        <input type="text" id="orig-${productId}"
-                                            value="${p.originalPrice || ''}"
-                                            placeholder="(aucun)"
-                                            style="width:90px; padding:4px 8px; border:1px solid #ddd; border-radius:6px; font-family:inherit; color:#aaa;">
-                                    </div>
-                                `}
-                                <button onclick="handleSavePrice('${brand}', ${pIdx}, '${productId}')"
-                                    style="margin-top:10px; padding:6px 18px; border-radius:20px; border:none;
-                                    background:var(--primary); color:#fff; cursor:pointer; font-family:inherit; font-size:0.85rem;">
-                                    💾 Sauvegarder
-                                </button>
-                                <span id="saved-${productId}" style="display:none; color:green; font-size:0.8rem; margin-left:8px;">✓ Sauvegardé !</span>
-                            </div>
+                                `;
+
+                }).join('')}
                         </div>
-                    `;
-                }).join('');
-                return brandProducts;
-            }).join('');
+                    </div>
+                `;
+            };
+
+            list.innerHTML = `
+                ${renderSection("Produits en Ligne", publicProducts, "✨", "Aucun produit public.", "public")}
+                ${renderSection("Produits Internes / Hors-Catalogue", internalProducts, "📦", "Aucun produit interne.", "internal")}
+            `;
         }
 
         async function handleSavePrice(brand, pIdx, productId) {
@@ -814,20 +1210,20 @@
                 productsData[brand][pIdx].sizes = newSizes;
             }
 
-            const newPrice = document.getElementById(`price-${productId}`)?.value.trim() || p.price;
-            const newOriginal = document.getElementById(`orig-${productId}`)?.value.trim() || '';
+            const newPrice = document.getElementById(`price-${productId}`)?.value?.trim() || p.price;
+            const newOriginal = document.getElementById(`orig-${productId}`)?.value?.trim() || '';
             const newStatus = document.getElementById(`status-${productId}`)?.value || 'in-stock';
 
             // Update in-memory
-            productsData[brand][pIdx].price = newPrice;
-            productsData[brand][pIdx].originalPrice = newOriginal;
-            productsData[brand][pIdx].status = newStatus;
+            p.price = newPrice;
+            p.originalPrice = newOriginal;
+            p.status = newStatus;
 
-            const ok = await saveProductPrice(p.name, newPrice, newOriginal, newSizes, newStatus);
+            const ok = await saveProductPrice(p.name, newPrice, newOriginal, newSizes, newStatus, p.id);
             if (ok) {
                 const indicator = document.getElementById(`saved-${productId}`);
                 if (indicator) {
-                    indicator.style.display = 'inline';
+                    indicator.style.display = 'block';
                     setTimeout(() => indicator.style.display = 'none', 2500);
                 }
             }
@@ -882,17 +1278,26 @@
                             <p>📞 <a href="tel:${order.customer_phone}" style="color: var(--secondary); text-decoration: none;">${order.customer_phone}</a></p>
                             <div style="margin-top: 10px; font-size: 0.85rem; color: #555; background: #fafafa; padding: 10px; border-radius: 10px;">
                                 <strong>Articles :</strong><br>
-                                ${order.items.map(item => `- ${item.name} (${item.variant})`).join('<br>')}
+                                ${order.items.map((item, idx) => `
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                        <span style="flex: 1;">- ${item.name}${item.variant && item.variant !== 'Standard' ? ` (${item.variant})` : ''}</span>
+                                        <button onclick="removeItemFromOrder('${order.id}', ${idx})" 
+                                            style="background: none; border: none; color: #cc0000; cursor: pointer; padding: 2px 8px; font-size: 0.8rem; font-weight: bold;" 
+                                            title="Enlever cet article">✕</button>
+                                    </div>
+                                `).join('')}
                             </div>
                             <button class="btn-add-item" onclick="toggleAddProduct('${order.id}')">+ Ajouter un article</button>
                             
                             <div id="add-product-${order.id}" class="add-product-container">
                                 <select id="product-select-${order.id}" onchange="updateVariantsDropdown('${order.id}')">
                                     <option value="">Sélectionner un produit...</option>
+                                    <option value="CUSTOM|CUSTOM">--- Article Personnalisé ---</option>
                                     ${Object.keys(productsData).flatMap(brand =>
                     productsData[brand].map(p => `<option value="${brand}|${p.name}">${brand} - ${p.name}</option>`)
                 ).join('')}
                                 </select>
+                                <input type="text" id="custom-name-${order.id}" placeholder="Nom de l'article" style="display:none; width:100%; padding:10px; border-radius:10px; border:1px solid #ddd; margin-bottom:10px; font-family:inherit;">
                                 <select id="variant-select-${order.id}" style="display:none;" onchange="updateDefaultPrice('${order.id}')">
                                     <option value="">Sélectionner variante...</option>
                                 </select>
@@ -952,7 +1357,17 @@
         function updateVariantsDropdown(orderId) {
             const select = document.getElementById(`product-select-${orderId}`);
             const variantSelect = document.getElementById(`variant-select-${orderId}`);
+            const customNameInput = document.getElementById(`custom-name-${orderId}`);
             const [brand, productName] = select.value.split('|');
+
+            if (brand === 'CUSTOM') {
+                variantSelect.style.display = 'none';
+                customNameInput.style.display = 'block';
+                document.getElementById(`custom-price-${orderId}`).value = '';
+                return;
+            } else {
+                customNameInput.style.display = 'none';
+            }
 
             if (!brand) {
                 variantSelect.style.display = 'none';
@@ -993,19 +1408,30 @@
         async function confirmAddProduct(orderId) {
             const select = document.getElementById(`product-select-${orderId}`);
             const variantSelect = document.getElementById(`variant-select-${orderId}`);
+            const customNameInput = document.getElementById(`custom-name-${orderId}`);
             const [brand, productName] = select.value.split('|');
 
             if (!brand) return alert("Sélectionnez un produit");
 
-            const product = productsData[brand].find(p => p.name === productName);
-            const variantLabel = variantSelect.style.display === 'block' ? variantSelect.value : 'Standard';
+            let finalName = productName;
+            let finalVariant = "";
 
-            // Find price
-            let itemPrice = product.price;
-            if (variantLabel !== 'Standard') {
-                const variant = product.sizes.find(s => s.label === variantLabel);
-                if (variant) itemPrice = variant.price;
+            if (brand === 'CUSTOM') {
+                finalName = customNameInput.value.trim();
+                finalVariant = "Custom";
+                if (!finalName) return alert("Veuillez entrer le nom de l'article");
+            } else {
+                const product = productsData[brand].find(p => p.name === productName);
+                const variantLabel = variantSelect.style.display === 'block' ? variantSelect.value : 'Standard';
+                finalVariant = variantLabel;
             }
+
+            // USE CUSTOM PRICE IF PROVIDED
+            const customPriceInput = document.getElementById(`custom-price-${orderId}`);
+            let finalPrice = customPriceInput.value.trim();
+            if (finalPrice && !finalPrice.toLowerCase().includes('dt')) finalPrice += 'dt';
+
+            if (!finalPrice) return alert("Veuillez entrer un prix");
 
             // Fetch current order to update it
             const { data: order, error: fetchError } = await supabaseClient
@@ -1017,17 +1443,20 @@
             if (fetchError) return alert("Erreur lors de la récupération de la commande");
 
             const currentItems = order.items || [];
+            const newItems = [...currentItems, { name: finalName, variant: finalVariant, price: finalPrice }];
 
-            // USE CUSTOM PRICE IF PROVIDED
-            const customPrice = document.getElementById(`custom-price-${orderId}`).value.trim();
-            const finalPrice = customPrice || itemPrice;
+            // Calculate new total from items
+            let subtotal = 0;
+            newItems.forEach(item => {
+                const priceMatch = item.price.toString().match(/[\d.]+/);
+                const price = priceMatch ? parseFloat(priceMatch[0]) : 0;
+                subtotal += price;
+            });
 
-            const newItems = [...currentItems, { name: productName, variant: variantLabel, price: finalPrice }];
+            let finalOrderTotal = subtotal;
+            if (subtotal < 100 && subtotal > 0) finalOrderTotal += 7;
 
-            // Calculate new total
-            const currentTotal = parseFloat(order.total_price.replace('dt', '') || '0');
-            const addedPrice = parseFloat(finalPrice.replace('dt', '') || '0');
-            const newTotalPrice = (currentTotal + addedPrice).toFixed(1) + 'dt';
+            const newTotalPrice = finalOrderTotal.toFixed(1) + 'dt';
 
             const { error: updateError } = await supabaseClient
                 .from('orders')
@@ -1043,6 +1472,56 @@
             } else {
                 toggleAddProduct(orderId);
                 // Realtime will trigger the refresh
+            }
+        }
+
+        async function removeItemFromOrder(orderId, itemIndex) {
+            if (!confirm("Voulez-vous vraiment enlever cet article de la commande ?")) return;
+
+            // Fetch current order
+            const { data: order, error: fetchError } = await supabaseClient
+                .from('orders')
+                .select('*')
+                .eq('id', orderId)
+                .single();
+
+            if (fetchError) return alert("Erreur lors de la récupération de la commande");
+
+            const currentItems = order.items || [];
+            if (itemIndex < 0 || itemIndex >= currentItems.length) return;
+
+            // Remove item
+            const newItems = [...currentItems];
+            newItems.splice(itemIndex, 1);
+
+            // Recalculate total
+            let subtotal = 0;
+            newItems.forEach(item => {
+                // More robust price cleaning
+                const priceMatch = item.price.toString().match(/[\d.]+/);
+                const price = priceMatch ? parseFloat(priceMatch[0]) : 0;
+                subtotal += price;
+            });
+
+            let finalOrderTotal = subtotal;
+            // 7dt shipping if total is less than 100dt (and not 0)
+            if (subtotal < 100 && subtotal > 0) {
+                finalOrderTotal += 7;
+            }
+
+            const newTotalPrice = finalOrderTotal.toFixed(1) + 'dt';
+
+            const { error: updateError } = await supabaseClient
+                .from('orders')
+                .update({
+                    items: newItems,
+                    total_price: newTotalPrice
+                })
+                .eq('id', orderId);
+
+            if (updateError) {
+                alert("Erreur lors de la suppression de l'article");
+                console.error(updateError);
             }
         }
 
@@ -1063,85 +1542,85 @@
                 }
 
                 return `
-                <tr style="border-bottom: 1px solid #eee;">
+                < tr style = "border-bottom: 1px solid #eee;" >
                     <td style="padding: 10px; width: 60px;"><img src="${imageUrl || 'logo.png'}" style="width: 50px; height: 50px; object-fit: contain; border-radius: 5px;" onerror="this.src='logo.png'"></td>
                     <td style="padding: 10px; text-align: left;">${item.name} <br><span style="font-size: 0.8rem; color: #666;">${item.variant}</span></td>
                     <td style="padding: 10px; text-align: right;">${item.price}</td>
-                </tr>
-            `;
+                </tr >
+                `;
             }).join('');
 
             const htmlContent = `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Reçu - AuraSkin</title>
-                    <style>
-                        body { font-family: 'Helvetica', sans-serif; padding: 40px; color: #333; max-width: 800px; margin: 0 auto; }
-                        .header { text-align: center; margin-bottom: 40px; }
-                        .logo { font-size: 2rem; font-weight: bold; color: #f79da6; letter-spacing: 2px; }
-                        .meta { display: flex; justify-content: space-between; margin-bottom: 30px; font-size: 0.9rem; color: #555; }
-                        .customer { margin-bottom: 30px; background: #f9f9f9; padding: 20px; border-radius: 10px; }
-                        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-                        th { text-align: left; padding: 10px; border-bottom: 2px solid #f79da6; color: #f79da6; }
-                        .total { text-align: right; font-size: 1.5rem; font-weight: bold; margin-top: 20px; }
-                        .footer { margin-top: 60px; text-align: center; font-size: 0.8rem; color: #999; border-top: 1px solid #eee; padding-top: 20px; }
-                        @media print {
-                            body { -webkit-print-color-adjust: exact; }
+                < !DOCTYPE html >
+                    <html>
+                        <head>
+                            <title>Reçu - AuraSkin</title>
+                            <style>
+                                body {font - family: 'Helvetica', sans-serif; padding: 40px; color: #333; max-width: 800px; margin: 0 auto; }
+                                .header {text - align: center; margin-bottom: 40px; }
+                                .logo {font - size: 2rem; font-weight: bold; color: #f79da6; letter-spacing: 2px; }
+                                .meta {display: flex; justify-content: space-between; margin-bottom: 30px; font-size: 0.9rem; color: #555; }
+                                .customer {margin - bottom: 30px; background: #f9f9f9; padding: 20px; border-radius: 10px; }
+                                table {width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+                                th {text - align: left; padding: 10px; border-bottom: 2px solid #f79da6; color: #f79da6; }
+                                .total {text - align: right; font-size: 1.5rem; font-weight: bold; margin-top: 20px; }
+                                .footer {margin - top: 60px; text-align: center; font-size: 0.8rem; color: #999; border-top: 1px solid #eee; padding-top: 20px; }
+                                @media print {
+                                    body {-webkit - print - color - adjust: exact; }
                         }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <div class="logo">AuraSkin</div>
-                        <p>Reçu de Commande</p>
-                    </div>
+                            </style>
+                        </head>
+                        <body>
+                            <div class="header">
+                                <div class="logo">AuraSkin</div>
+                                <p>Reçu de Commande</p>
+                            </div>
 
-                    <div class="meta">
-                        <div>
-                            <strong>Date:</strong> ${date} à ${time}<br>
-                            <strong>ID:</strong> #${order.id.slice(0, 8)}
-                        </div>
-                        <div style="text-align: right;">
-                            <strong>Statut:</strong> ${order.status}
-                        </div>
-                    </div>
+                            <div class="meta">
+                                <div>
+                                    <strong>Date:</strong> ${date} à ${time}<br>
+                                        <strong>ID:</strong> #${order.id.slice(0, 8)}
+                                </div>
+                                <div style="text-align: right;">
+                                    <strong>Statut:</strong> ${order.status}
+                                </div>
+                            </div>
 
-                    <div class="customer">
-                        <strong>Client:</strong> ${order.customer_name}<br>
-                        <strong>Tél:</strong> ${order.customer_phone}<br>
-                        <strong>Adresse:</strong> ${order.customer_city}, ${order.customer_address}
-                    </div>
+                            <div class="customer">
+                                <strong>Client:</strong> ${order.customer_name}<br>
+                                    <strong>Tél:</strong> ${order.customer_phone}<br>
+                                        <strong>Adresse:</strong> ${order.customer_city}, ${order.customer_address}
+                                    </div>
 
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="width: 60px;">Image</th>
-                                <th>Article</th>
-                                <th style="text-align: right;">Prix</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${itemsHtml}
-                        </tbody>
-                    </table>
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 60px;">Image</th>
+                                                <th>Article</th>
+                                                <th style="text-align: right;">Prix</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${itemsHtml}
+                                        </tbody>
+                                    </table>
 
-                    <div class="total">
-                        Total: ${order.total_price}
-                    </div>
+                                    <div class="total">
+                                        Total: ${order.total_price}
+                                    </div>
 
-                    <div class="footer">
-                        <p>Merci pour votre confiance ! ✨</p>
-                        <p>AuraSkin Tunisia | Tél: 27 953 154 / 50 914 596</p>
-                        <p>Suivez-nous sur Instagram: @__aura__skin__</p>
-                    </div>
+                                    <div class="footer">
+                                        <p>Merci pour votre confiance ! ✨</p>
+                                        <p>AuraSkin Tunisia | Tél: 27 953 154 / 50 914 596</p>
+                                        <p>Suivez-nous sur Instagram: @__aura__skin__</p>
+                                    </div>
 
-                    <script>
-                        window.onload = function() { window.print(); }
-                    <\/script>
-                </body>
-                </html>
-            `;
+                                    <script>
+                                        window.onload = function() {window.print(); }
+                                        <\/script>
+                                    </body>
+                                </html>
+                                `;
 
             printWindow.document.write(htmlContent);
             printWindow.document.close();
@@ -1169,39 +1648,39 @@
                 else if (f.paid) borderStyle = '2px solid #4CAF50';
 
                 return `
-                <div class="facture-card" style="border: ${borderStyle}; opacity: ${f.canceled ? '0.8' : '1'}; position: relative;">
-                    ${f.canceled ? '<div style="position: absolute; top: 10px; right: 10px; color: #F44336; font-weight: bold; border: 2px solid #F44336; padding: 3px 8px; transform: rotate(10deg); font-size: 0.8rem; background: rgba(255,255,255,0.95); border-radius: 5px; z-index: 5; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">ANNULÉ</div>' : ''}
-                    <button class="btn-delete" onclick="deleteFacture(${idx})" title="Supprimer">✕</button>
-                    <div class="facture-img-container" onclick="showOverlay('${f.image}')">
-                        <img src="${f.image}" class="facture-img" onerror="this.src='logo.png'">
-                    </div>
-                    <div class="facture-info">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 5px;">
-                            <h4>${f.supplier}</h4>
-                            <div style="display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end;">
-                                <button onclick="toggleFacturePaid(${idx})" style="padding: 4px 8px; border-radius: 12px; border: none; font-size: 0.7rem; font-weight: bold; cursor: pointer; background: ${f.paid ? '#4CAF50' : '#eee'}; color: ${f.paid ? 'white' : '#666'};">
-                                    ${f.paid ? 'Payé ✓' : 'Marquer Payé'}
-                                </button>
-                                <button onclick="toggleFactureCanceled(${idx})" style="padding: 4px 8px; border-radius: 12px; border: none; font-size: 0.7rem; font-weight: bold; cursor: pointer; background: ${f.canceled ? '#F44336' : '#eee'}; color: ${f.canceled ? 'white' : '#666'}; margin-top: 4px;">
-                                    ${f.canceled ? 'Annulé ✕' : 'Marquer Annulé'}
-                                </button>
-                            </div>
-                        </div>
-                        <p>📅 ${new Date(f.date).toLocaleDateString('fr-FR')}</p>
-                        ${f.rate ? `<p style="font-size: 0.75rem; color: #aaa;">Taux: 1${f.currency} = ${f.rate} dt</p>` : ''}
-                    </div>
-                    <div class="facture-total" style="text-decoration: ${f.canceled ? 'line-through' : 'none'};">
-                        ${f.amount} ${f.currency}
-                        ${f.amount_dt ? `<span style="display: block; font-size: 1.2rem; color: ${f.canceled ? '#999' : 'var(--primary)'}; margin-top: 4px;">≈ ${f.amount_dt} dt</span>` : ''}
-                    </div>
-                </div>
+                                <div class="facture-card" style="border: ${borderStyle}; opacity: ${f.canceled ? '0.8' : '1'}; position: relative;">
+                                    ${f.canceled ? '<div style="position: absolute; top: 10px; right: 10px; color: #F44336; font-weight: bold; border: 2px solid #F44336; padding: 3px 8px; transform: rotate(10deg); font-size: 0.8rem; background: rgba(255,255,255,0.95); border-radius: 5px; z-index: 5; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">ANNULÉ</div>' : ''}
+                                    <button class="btn-delete" onclick="deleteFacture(${idx})" title="Supprimer">✕</button>
+                                    <div class="facture-img-container" onclick="showOverlay('${f.image}')">
+                                        <img src="${f.image}" class="facture-img" onerror="this.src='logo.png'">
+                                    </div>
+                                    <div class="facture-info">
+                                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 5px;">
+                                            <h4>${f.supplier}</h4>
+                                            <div style="display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end;">
+                                                <button onclick="toggleFacturePaid(${idx})" style="padding: 4px 8px; border-radius: 12px; border: none; font-size: 0.7rem; font-weight: bold; cursor: pointer; background: ${f.paid ? '#4CAF50' : '#eee'}; color: ${f.paid ? 'white' : '#666'};">
+                                                    ${f.paid ? 'Payé ✓' : 'Marquer Payé'}
+                                                </button>
+                                                <button onclick="toggleFactureCanceled(${idx})" style="padding: 4px 8px; border-radius: 12px; border: none; font-size: 0.7rem; font-weight: bold; cursor: pointer; background: ${f.canceled ? '#F44336' : '#eee'}; color: ${f.canceled ? 'white' : '#666'}; margin-top: 4px;">
+                                                    ${f.canceled ? 'Annulé ✕' : 'Marquer Annulé'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <p>📅 ${new Date(f.date).toLocaleDateString('fr-FR')}</p>
+                                        ${f.rate ? `<p style="font-size: 0.75rem; color: #aaa;">Taux: 1${f.currency} = ${f.rate} dt</p>` : ''}
+                                    </div>
+                                    <div class="facture-total" style="text-decoration: ${f.canceled ? 'line-through' : 'none'};">
+                                        ${f.amount} ${f.currency}
+                                        ${f.amount_dt ? `<span style="display: block; font-size: 1.2rem; color: ${f.canceled ? '#999' : 'var(--primary)'}; margin-top: 4px;">≈ ${f.amount_dt} dt</span>` : ''}
+                                    </div>
+                                </div>
             `}).join('');
 
             const totalHtml = `
-                <div style="grid-column: 1/-1; background: var(--secondary); color: white; padding: 20px; border-radius: 15px; margin-top: 25px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-                    <h3 style="margin: 0; font-size: 1.2rem; font-weight: 500;">Total Restant à Payer</h3>
-                    <div style="font-size: 1.8rem; font-weight: 800;">${totalUnpaidDt.toFixed(2)} dt</div>
-                </div>
+                                <div style="grid-column: 1/-1; background: var(--secondary); color: white; padding: 20px; border-radius: 15px; margin-top: 25px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                                    <h3 style="margin: 0; font-size: 1.2rem; font-weight: 500;">Total Restant à Payer</h3>
+                                    <div style="font-size: 1.8rem; font-weight: 800;">${totalUnpaidDt.toFixed(2)} dt</div>
+                                </div>
             `;
 
             grid.innerHTML = cardsHtml + totalHtml;
