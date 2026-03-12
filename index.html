@@ -1310,32 +1310,7 @@
             }
         }
     </style>
-    <script>
-        // Load price overrides from localStorage and patch productsData on arrival
-        (function () {
-            try {
-                const storedPrices = JSON.parse(localStorage.getItem('aura_product_prices')) || {};
-
-                for (const productName in storedPrices) {
-                    const row = storedPrices[productName];
-                    for (const brand in productsData) {
-                        const product = productsData[brand].find(p => p.name === productName);
-                        if (product) {
-                            if (row.price) product.price = row.price;
-                            if (row.original_price !== undefined) product.originalPrice = row.original_price || '';
-                            if (row.status !== undefined) product.status = row.status;
-                            if (row.sizes) {
-                                try { product.sizes = JSON.parse(row.sizes); } catch (e) { }
-                            }
-                        }
-                    }
-                }
-            } catch (e) {
-                // Fail silently — fall back to products.js prices
-                console.warn('Could not load local price overrides:', e);
-            }
-        })();
-    </script>
+    <!-- localStorage price override removed: Supabase is the single source of truth -->
 </head>
 
 <body>

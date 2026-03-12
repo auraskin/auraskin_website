@@ -1210,8 +1210,10 @@
                 productsData[brand][pIdx].sizes = newSizes;
             }
 
-            const newPrice = document.getElementById(`price-${productId}`)?.value?.trim() || p.price;
-            const newOriginal = document.getElementById(`orig-${productId}`)?.value?.trim() || '';
+            const priceEl = document.getElementById(`price-${productId}`);
+            const origEl = document.getElementById(`orig-${productId}`);
+            const newPrice = priceEl ? priceEl.value.trim() : p.price;
+            const newOriginal = origEl ? origEl.value.trim() : (p.originalPrice || p.original_price || '');
             const newStatus = document.getElementById(`status-${productId}`)?.value || 'in-stock';
 
             // Update in-memory
