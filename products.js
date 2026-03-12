@@ -4,8 +4,8 @@ var productsData = {
             name: "Advanced Snail 96 Mucin Power Essence",
             tagline: "Light-weight essence for a natural glow from the inside.",
             description: "Created from nutritious, low-stimulation filtered snail mucin to keep your skin moisturized and illuminated all day.",
-            price: "87dt",
-            originalPrice: "120dt",
+            price: "125dt",
+            originalPrice: "160dt",
             image: "assets/products/cosrx_snail_essence_1770468689697.png",
             sizes: []
         },
