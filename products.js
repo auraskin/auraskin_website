@@ -13,7 +13,7 @@ var productsData = {
             name: "Advanced Snail 92 All in one Cream",
             tagline: "An all-in-one solution cream that repairs and soothes irritated, sensitized skin after breakouts.",
             description: "A rich gel-type cream absorbs instantly into the skin with a full of nourishment while leaving your skin feeling fresh and comfortable.",
-            price: "134dt",
+            price: "96dt",
             originalPrice: "134dt",
             image: "assets/products/cosrx_snail_cream.jpg",
             sizes: []
