@@ -551,6 +551,7 @@
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('orders')">Commandes 📦</button>
         <button class="tab-btn" onclick="switchTab('products')">Produits 🧴</button>
+        <button class="tab-btn" onclick="switchTab('stock')">Stock 📦</button>
         <button class="tab-btn" onclick="switchTab('factures')">Factures 🧾</button>
     </div>
 
@@ -660,6 +661,31 @@
         </div>
     </div>
 
+    <!-- ----- TAB: STOCK ----- -->
+    <div id="stockContent" class="tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+            <h2 style="font-size: 1.8rem; font-weight: 800; color: #333;">📥 Gestion de Stock</h2>
+            <div style="display: flex; gap: 15px;">
+                <div
+                    style="background: white; padding: 10px 20px; border-radius: 12px; font-weight: 700; color: #8b4a50; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                    Total Articles en Stock : <span id="totalStockCount">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Skeleton -->
+        <div id="stockLoading" style="text-align: center; padding: 40px; color: #999; display: none;">
+            <div class="spinner" style="margin: 0 auto 15px auto;"></div>
+            <p>Chargement de l'inventaire en cours...</p>
+        </div>
+
+        <div id="stockList"
+            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
+            <!-- Stock cards will be injected here -->
+        </div>
+    </div>
+
+    <!-- ----- TAB: FACTURES ----- -->
     <div id="facturesContent" class="tab-content">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h2 style="font-size: 1.2rem; color: var(--secondary);">Factures Fournisseurs</h2>
@@ -817,8 +843,12 @@
                 document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
                 document.getElementById('productsContent').classList.add('active');
                 renderProducts();
-            } else if (tab === 'factures') {
+            } else if (tab === 'stock') {
                 document.querySelector('.tab-btn:nth-child(3)').classList.add('active');
+                document.getElementById('stockContent').classList.add('active');
+                renderStock();
+            } else if (tab === 'factures') {
+                document.querySelector('.tab-btn:nth-child(4)').classList.add('active');
                 document.getElementById('facturesContent').classList.add('active');
                 renderFactures();
             }
@@ -1802,6 +1832,82 @@
                 .reduce((sum, o) => sum + parseFloat(o.total_price.replace('dt', '')), 0);
 
             document.getElementById('totalRevenue').textContent = total.toFixed(2) + ' dt';
+        }
+
+        function renderStock() {
+            const list = document.getElementById('stockList');
+            if (!list) return;
+            const pData = productsData;
+
+            let totalStock = 0;
+            let html = '';
+
+            Object.keys(pData).forEach(brand => {
+                pData[brand].forEach((p, pIdx) => {
+                    const productId = `${brand}-${pIdx}`.replace(/[^a-z0-9]/gi, '_');
+                    const currentStock = p.stock || 0;
+                    totalStock += currentStock;
+
+                    const alertStyle = currentStock === 0 ? 'border: 2px solid #ff4444; background: #fff5f5;' : (currentStock < 5 ? 'border: 2px solid #ffaa00;' : 'border: 1px solid #fee2e2;');
+
+                    html += `
+                        <div class="product-card" style="flex-direction:column; align-items:flex-start; gap:12px; padding:20px; ${alertStyle}">
+                            <div style="display:flex; gap:15px; align-items:center; width:100%; margin-bottom: 10px;">
+                                <img src="${p.image}" class="product-img" onerror="this.src='logo.png'" style="width:50px; height:50px;">
+                                <div class="product-info">
+                                    <h5 style="font-size:1rem; margin-bottom:4px;">${p.name}</h5>
+                                    <p style="color:#999; font-size:0.8rem;">${brand}</p>
+                                </div>
+                            </div>
+                            
+                            <div style="display:flex; align-items:center; justify-content:space-between; width:100%; background:white; padding:10px; border-radius:12px; box-shadow:0 2px 5px rgba(0,0,0,0.02);">
+                                <span style="font-weight:700; color:#555; font-size:0.9rem;">Stock :</span>
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <button onclick="document.getElementById('stock-${productId}').stepDown()" style="width:30px; height:30px; border-radius:8px; border:none; background:#eee; cursor:pointer; font-weight:bold;">-</button>
+                                    <input type="number" id="stock-${productId}" value="${currentStock}" min="0" style="width:60px; text-align:center; padding:5px; border:1.5px solid #eee; border-radius:8px; font-weight:bold;">
+                                    <button onclick="document.getElementById('stock-${productId}').stepUp()" style="width:30px; height:30px; border-radius:8px; border:none; background:#eee; cursor:pointer; font-weight:bold;">+</button>
+                                </div>
+                            </div>
+                            
+                            <button onclick="saveStock('${brand}', ${pIdx}, '${productId}')"
+                                class="btn-status" style="width:100%; margin-top:5px; background:var(--secondary); font-size:0.9rem; padding:10px; box-shadow: 0 4px 10px rgba(139, 74, 80, 0.2);">💾 Enregistrer Stock</button>
+                            <div id="stock-saved-${productId}" style="display:none; color:#2e7d32; font-size:0.85rem; margin-top:5px; text-align:center; width:100%; font-weight:700;">✓ Mis à jour !</div>
+                        </div>
+                    `;
+                });
+            });
+
+            list.innerHTML = html;
+            document.getElementById('totalStockCount').innerText = totalStock;
+        }
+
+        async function saveStock(brand, pIdx, productId) {
+            const p = productsData[brand][pIdx];
+            const newStockVal = document.getElementById(`stock-${productId}`).value;
+            const newStock = parseInt(newStockVal) || 0;
+            const newStatus = newStock === 0 ? "out-of-stock" : (p.status === "out-of-stock" ? "in-stock" : p.status); // Auto Rupture status
+
+            try {
+                let query = supabaseClient.from('products').update({ stock: newStock, status: newStatus });
+                if (p.id) query = query.eq('id', p.id);
+                else query = query.eq('name', p.name);
+
+                const { error } = await query;
+                if (error) throw error;
+
+                p.stock = newStock;
+                p.status = newStatus;
+
+                const indicator = document.getElementById(`stock-saved-${productId}`);
+                if (indicator) {
+                    indicator.style.display = 'block';
+                    setTimeout(() => indicator.style.display = 'none', 2500);
+                }
+
+                renderStock(); // full refresh to rebuild total count and boundary colors
+            } catch (err) {
+                alert('Erreur: ' + err.message);
+            }
         }
 
         // --- PWA INSTALLATION LOGIC ---
