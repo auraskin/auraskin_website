@@ -1,23 +1,22 @@
-const CACHE_NAME = 'auraskin-admin-v2';
-const ASSETS = [
-    'admin.html',
-    'manifest-admin.json',
-    'products.js',
-    'logo.png'
-];
+const CACHE_NAME = 'auraskin-admin-v3'; // Bumped version to break old cache
 
 self.addEventListener('install', (e) => {
+    // Force immediate takeover
+    self.skipWaiting();
+});
+
+self.addEventListener('activate', (e) => {
+    // Nuke all old caches
     e.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(ASSETS);
-        })
+        caches.keys().then((keyList) => {
+            return Promise.all(keyList.map((key) => {
+                return caches.delete(key);
+            }));
+        }).then(() => self.clients.claim())
     );
 });
 
 self.addEventListener('fetch', (e) => {
-    e.respondWith(
-        caches.match(e.request).then((res) => {
-            return res || fetch(e.request);
-        })
-    );
+    // Pure network strictly to avoid locking the admin panel
+    e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
 });

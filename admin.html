@@ -725,7 +725,15 @@
         const SUPABASE_KEY = 'sb_publishable_8r46Ru1eCBhchCdhzM3hsg_TC_5vZz3';
         const ADMIN_PASSWORD = 'aura_admin_2024'; // Change this to your desired secret password
 
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+            global: {
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                }
+            }
+        });
 
         function checkPassword() {
             const pass = document.getElementById('adminPassword').value;
