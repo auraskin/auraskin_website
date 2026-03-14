@@ -1845,14 +1845,52 @@
             Object.keys(pData).forEach(brand => {
                 pData[brand].forEach((p, pIdx) => {
                     const productId = `${brand}-${pIdx}`.replace(/[^a-z0-9]/gi, '_');
-                    const currentStock = p.stock || 0;
-                    totalStock += currentStock;
+                    const currentLocation = p.stock_location || 'Tunisie';
 
-                    const alertStyle = currentStock === 0 ? 'border: 2px solid #ff4444; background: #fff5f5;' : (currentStock < 5 ? 'border: 2px solid #ffaa00;' : 'border: 1px solid #fee2e2;');
+                    let sizesStockHtml = '';
+                    let productTotalStock = 0;
+
+                    if (p.sizes && p.sizes.length > 0) {
+                        sizesStockHtml = `<div style="width:100%; margin-top:10px; border-top:1px solid #eee; padding-top:10px;">
+                            <p style="font-size:0.8rem; color:#8b4a50; font-weight:700; margin:10px 0;">Stock par Volume :</p>`;
+
+                        p.sizes.forEach((s, sIdx) => {
+                            const variantStock = s.stock || 0;
+                            productTotalStock += variantStock;
+                            sizesStockHtml += `
+                                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; background:#fafafa; padding:8px; border-radius:8px;">
+                                    <span style="font-size:0.85rem; color:#555; min-width:60px;">${s.label}:</span>
+                                    <div style="display:flex; align-items:center; gap:5px;">
+                                        <button onclick="document.getElementById('stock-${productId}-${sIdx}').stepDown()" style="width:25px; height:25px; border-radius:5px; border:none; background:#eee; cursor:pointer;">-</button>
+                                        <input type="number" id="stock-${productId}-${sIdx}" value="${variantStock}" min="0" style="width:50px; text-align:center; border:1px solid #ddd; border-radius:5px; font-weight:bold; font-size:0.85rem;">
+                                        <button onclick="document.getElementById('stock-${productId}-${sIdx}').stepUp()" style="width:25px; height:25px; border-radius:5px; border:none; background:#eee; cursor:pointer;">+</button>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        sizesStockHtml += `</div>`;
+                    } else {
+                        const currentStock = p.stock || 0;
+                        productTotalStock = currentStock;
+                        sizesStockHtml = `
+                            <div style="display:flex; align-items:center; justify-content:space-between; width:100%; background:white; padding:10px; border-radius:12px; box-shadow:0 2px 5px rgba(0,0,0,0.02); margin-top:10px;">
+                                <span style="font-weight:700; color:#555; font-size:0.9rem;">Quantité :</span>
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <button onclick="document.getElementById('stock-${productId}').stepDown()" style="width:30px; height:30px; border-radius:8px; border:none; background:#eee; cursor:pointer; font-weight:bold;">-</button>
+                                    <input type="number" id="stock-${productId}" value="${currentStock}" min="0" style="width:60px; text-align:center; padding:5px; border:1.5px solid #eee; border-radius:8px; font-weight:bold;">
+                                    <button onclick="document.getElementById('stock-${productId}').stepUp()" style="width:30px; height:30px; border-radius:8px; border:none; background:#eee; cursor:pointer; font-weight:bold;">+</button>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    totalStock += productTotalStock;
+
+                    const alertStyle = productTotalStock === 0 ? 'border: 2px solid #ff4444; background: #fff5f5;' : (productTotalStock < 5 ? 'border: 2px solid #ffaa00;' : 'border: 1px solid #fee2e2;');
 
                     html += `
                         <div class="product-card" style="flex-direction:column; align-items:flex-start; gap:12px; padding:20px; ${alertStyle}">
-                            <div style="display:flex; gap:15px; align-items:center; width:100%; margin-bottom: 10px;">
+                            <div style="display:flex; gap:15px; align-items:center; width:100%; margin-bottom: 5px;">
                                 <img src="${p.image}" class="product-img" onerror="this.src='logo.png'" style="width:50px; height:50px;">
                                 <div class="product-info">
                                     <h5 style="font-size:1rem; margin-bottom:4px;">${p.name}</h5>
@@ -1860,17 +1898,20 @@
                                 </div>
                             </div>
                             
-                            <div style="display:flex; align-items:center; justify-content:space-between; width:100%; background:white; padding:10px; border-radius:12px; box-shadow:0 2px 5px rgba(0,0,0,0.02);">
-                                <span style="font-weight:700; color:#555; font-size:0.9rem;">Stock :</span>
-                                <div style="display:flex; align-items:center; gap:8px;">
-                                    <button onclick="document.getElementById('stock-${productId}').stepDown()" style="width:30px; height:30px; border-radius:8px; border:none; background:#eee; cursor:pointer; font-weight:bold;">-</button>
-                                    <input type="number" id="stock-${productId}" value="${currentStock}" min="0" style="width:60px; text-align:center; padding:5px; border:1.5px solid #eee; border-radius:8px; font-weight:bold;">
-                                    <button onclick="document.getElementById('stock-${productId}').stepUp()" style="width:30px; height:30px; border-radius:8px; border:none; background:#eee; cursor:pointer; font-weight:bold;">+</button>
-                                </div>
+                            <div style="width:100%; margin-bottom:5px;">
+                                <label style="font-size:0.75rem; color:#999; display:block; margin-bottom:4px;">Emplacement du stock :</label>
+                                <select id="location-${productId}" style="width:100%; padding:8px; border-radius:8px; border:1.5px solid #eee; font-family:inherit; font-size:0.85rem; background:white;">
+                                    <option value="Tunisie" ${currentLocation === 'Tunisie' ? 'selected' : ''}>🇹🇳 Tunisie</option>
+                                    <option value="USA" ${currentLocation === 'USA' ? 'selected' : ''}>🇺🇸 USA</option>
+                                    <option value="France" ${currentLocation === 'France' ? 'selected' : ''}>🇫🇷 France</option>
+                                    <option value="Corée" ${currentLocation === 'Corée' ? 'selected' : ''}>🇰🇷 Corée</option>
+                                </select>
                             </div>
+
+                            ${sizesStockHtml}
                             
                             <button onclick="saveStock('${brand}', ${pIdx}, '${productId}')"
-                                class="btn-status" style="width:100%; margin-top:5px; background:var(--secondary); font-size:0.9rem; padding:10px; box-shadow: 0 4px 10px rgba(139, 74, 80, 0.2);">💾 Enregistrer Stock</button>
+                                class="btn-status" style="width:100%; margin-top:10px; background:var(--secondary); font-size:0.9rem; padding:10px; box-shadow: 0 4px 10px rgba(139, 74, 80, 0.2);">💾 Enregistrer</button>
                             <div id="stock-saved-${productId}" style="display:none; color:#2e7d32; font-size:0.85rem; margin-top:5px; text-align:center; width:100%; font-weight:700;">✓ Mis à jour !</div>
                         </div>
                     `;
@@ -1883,12 +1924,31 @@
 
         async function saveStock(brand, pIdx, productId) {
             const p = productsData[brand][pIdx];
-            const newStockVal = document.getElementById(`stock-${productId}`).value;
-            const newStock = parseInt(newStockVal) || 0;
-            const newStatus = newStock === 0 ? "out-of-stock" : (p.status === "out-of-stock" ? "in-stock" : p.status); // Auto Rupture status
+            const location = document.getElementById(`location-${productId}`).value;
+            let newStock = 0;
+            let newSizes = null;
+
+            if (p.sizes && p.sizes.length > 0) {
+                newSizes = p.sizes.map((s, sIdx) => {
+                    const val = parseInt(document.getElementById(`stock-${productId}-${sIdx}`).value) || 0;
+                    newStock += val;
+                    return { ...s, stock: val };
+                });
+            } else {
+                newStock = parseInt(document.getElementById(`stock-${productId}`).value) || 0;
+            }
+
+            const newStatus = newStock === 0 ? "out-of-stock" : (p.status === "out-of-stock" ? "in-stock" : p.status);
 
             try {
-                let query = supabaseClient.from('products').update({ stock: newStock, status: newStatus });
+                const updateData = {
+                    stock: newStock,
+                    stock_location: location,
+                    status: newStatus
+                };
+                if (newSizes) updateData.sizes = newSizes;
+
+                let query = supabaseClient.from('products').update(updateData);
                 if (p.id) query = query.eq('id', p.id);
                 else query = query.eq('name', p.name);
 
@@ -1896,7 +1956,9 @@
                 if (error) throw error;
 
                 p.stock = newStock;
+                p.stock_location = location;
                 p.status = newStatus;
+                if (newSizes) p.sizes = newSizes;
 
                 const indicator = document.getElementById(`stock-saved-${productId}`);
                 if (indicator) {
@@ -1904,7 +1966,7 @@
                     setTimeout(() => indicator.style.display = 'none', 2500);
                 }
 
-                renderStock(); // full refresh to rebuild total count and boundary colors
+                renderStock();
             } catch (err) {
                 alert('Erreur: ' + err.message);
             }
