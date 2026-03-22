@@ -1,99 +1,98 @@
 var productsData = {
-        "COSRX": [
-            {
-                            name: "Advanced Snail 96 Mucin Power Essence",
-                            tagline: "Light-weight essence for a natural glow from the inside.",
-                            description: "Created from nutritious, low-stimulation filtered snail mucin to keep your skin moisturized and illuminated all day.",
-                            price: "126dt",
-                            originalPrice: "",
-                            image: "assets/products/cosrx_snail_essence_1770468689697.png",
-                            sizes: []
-            },
-            {
-                            name: "Advanced Snail 92 All in one Cream",
-                            tagline: "An all-in-one solution cream that repairs and soothes irritated, sensitized skin after breakouts.",
-                            description: "A rich gel-type cream absorbs instantly into the skin with a full of nourishment while leaving your skin feeling fresh and comfortable.",
-                            price: "96dt",
-                            originalPrice: "134dt",
-                            image: "assets/products/cosrx_snail_cream.jpg",
-                            sizes: []
-            },
-            {
-                            name: "Acne Pimple Master Patch",
-                            tagline: "Quick acne healing overnight",
-                            description: "Hydrocolloid patches that protect wounded or troubled area from getting worse while maintaining humidity of skin to prevent further breakouts. (24 patches)",
-                            price: "29dt",
-                            originalPrice: "",
-                            image: "assets/products/cosrx_acne_patch.jpg",
-                            sizes: []
-            }
-                ],
-        "SKIN 1004": [
-            {
-                            name: "Centella Toning Toner",
-                            tagline: "A gentle PHA exfoliating toner that can be used daily to thoroughly improve skin texture.",
-                            description: "Product Benefits: Calming, Soothing, Mild exfoliating. Skin Type: Normal, Sensitive.",
-                            price: "66dt",
-                            originalPrice: "77dt",
-                            image: "assets/products/centella_toner.jpg",
-                            collection: "Centella",
-                            sizes: [
-                                { label: "210ml", price: "66dt", originalPrice: "77dt" },
-                                { label: "400ml", price: "105dt", originalPrice: "110dt" }
-                                            ]
-            },
-            {
-                            name: "Hyalu-Cica Water-Fit Sun Serum UV",
-                            tagline: "A serum-like chemical sunscreen that is super lightweight, hydrating, and quickly absorbed.",
-                            description: "Product Benefits: Moisturizing, Soothing, UV Protection. Skin Type: Sensitive, Normal, Dry.",
-                            price: "81dt",
-                            originalPrice: "",
-                            image: "assets/products/skin1004_sun_serum.jpg",
-                            collection: "Hyalu-Cica",
-                            sizes: []
-            },
-            {
-                            name: "Centella Quick Calming Pad",
-                            tagline: "An essence-rich toner pad with Centella and Panthenol soothes and hydrates the skin in a simple 2-minute step.",
-                            description: "Product Benefits: Calming, Hydrating. Skin Type: Normal, Sensitive, Combination.",
-                            price: "70dt",
-                            originalPrice: "",
-                            image: "assets/products/skin1004-mask-pad-70-pads-130ml-centella-quick-calming-pad-38409144566006_1440x.webp",
-                            collection: "Centella",
-                            sizes: []
-            },
-            {
-                            name: "Centella Ampoule",
-                            tagline: "An all-rounder ampoule formulated to help soothe visible redness and comfort sensitive-looking skin.",
-                            description: "Product Benefits: Soothing, Calming. Skin Type: Sensitive, Normal.",
-                            price: "80dt",
-                            originalPrice: "98dt",
-                            image: "assets/products/skin1004-ampoule-serum-centella-ampoule-38409088401654_1440x.webp",
-                            collection: "Centella",
-                            sizes: []
-            },
-            {
-                            name: "Centella Light Cleansing Oil",
-                            tagline: "Centella and 6 plant-derived oils gently dissolve makeup, sunscreen and excess sebum on the skin, leaving a refreshing, oil-free finish.",
-                            description: "Product Benefits: Calming, Hydrating, Mild exfoliating. Skin Type: Normal, Dry, Sensitive.",
-                            price: "78dt",
-                            originalPrice: "90dt",
-                            image: "assets/products/skin1004-cleanser-centella-light-cleansing-oil-38409133490422_1440x.webp",
-                            collection: "Centella",
-                            sizes: []
-            },
-            {
-                            name: "Centella Ampoule Foam",
-                            tagline: "A pH-balanced (pH 5) cleanser formulated with coconut-derived surfactants and citric acid that gently cleanses the skin without leaving it feeling dry or tight.",
-                            description: "Product Benefits: Calming, Hydrating, Mild exfoliating. Skin Type: Normal, Dry, Sensitive.",
-                            price: "63dt",
-                            originalPrice: "",
-                            image: "assets/products/skin1004-cleanser-madagascar-centella-ampoule-foam-36436059226358_1440x.jpg",
-                            collection: "Centella",
-                            sizes: []
-            },
-            {
-                       
+    "COSRX": [
+        {
+            name: "Advanced Snail 96 Mucin Power Essence",
+            tagline: "Light-weight essence for a natural glow from the inside.",
+            description: "Created from nutritious, low-stimulation filtered snail mucin to keep your skin moisturized and illuminated all day.",
+            price: "126dt",
+            originalPrice: "",
+            image: "assets/products/cosrx_snail_essence_1770468689697.png",
+            sizes: []
+        },
+        {
+            name: "Advanced Snail 92 All in one Cream",
+            tagline: "An all-in-one solution cream that repairs and soothes irritated, sensitized skin after breakouts.",
+            description: "A rich gel-type cream absorbs instantly into the skin with a full of nourishment while leaving your skin feeling fresh and comfortable.",
+            price: "96dt",
+            originalPrice: "134dt",
+            image: "assets/products/cosrx_snail_cream.jpg",
+            sizes: []
+        },
+        {
+            name: "Acne Pimple Master Patch",
+            tagline: "Quick acne healing overnight",
+            description: "Hydrocolloid patches that protect wounded or troubled area from getting worse while maintaining humidity of skin to prevent further breakouts. (24 patches)",
+            price: "29dt",
+            originalPrice: "",
+            image: "assets/products/cosrx_acne_patch.jpg",
+            sizes: []
+        }
+    ],
+    "SKIN 1004": [
+        {
+            name: "Centella Toning Toner",
+            tagline: "A gentle PHA exfoliating toner that can be used daily to thoroughly improve skin texture.",
+            description: "Product Benefits: Calming, Soothing, Mild exfoliating. Skin Type: Normal, Sensitive.",
+            price: "66dt",
+            originalPrice: "77dt",
+            image: "assets/products/centella_toner.jpg",
+            collection: "Centella",
+            sizes: [
+                { label: "210ml", price: "66dt", originalPrice: "77dt" },
+                { label: "400ml", price: "105dt", originalPrice: "110dt" }
+            ]
+        },
+        {
+            name: "Hyalu-Cica Water-Fit Sun Serum UV",
+            tagline: "A serum-like chemical sunscreen that is super lightweight, hydrating, and quickly absorbed.",
+            description: "Product Benefits: Moisturizing, Soothing, UV Protection. Skin Type: Sensitive, Normal, Dry.",
+            price: "81dt",
+            originalPrice: "",
+            image: "assets/products/skin1004_sun_serum.jpg",
+            collection: "Hyalu-Cica",
+            sizes: []
+        },
+        {
+            name: "Centella Quick Calming Pad",
+            tagline: "An essence-rich toner pad with Centella and Panthenol soothes and hydrates the skin in a simple 2-minute step.",
+            description: "Product Benefits: Calming, Hydrating. Skin Type: Normal, Sensitive, Combination.",
+            price: "70dt",
+            originalPrice: "",
+            image: "assets/products/skin1004-mask-pad-70-pads-130ml-centella-quick-calming-pad-38409144566006_1440x.webp",
+            collection: "Centella",
+            sizes: []
+        },
+        {
+            name: "Centella Ampoule",
+            tagline: "An all-rounder ampoule formulated to help soothe visible redness and comfort sensitive-looking skin.",
+            description: "Product Benefits: Soothing, Calming. Skin Type: Sensitive, Normal.",
+            price: "80dt",
+            originalPrice: "98dt",
+            image: "assets/products/skin1004-ampoule-serum-centella-ampoule-38409088401654_1440x.webp",
+            collection: "Centella",
+            sizes: []
+        },
+        {
+            name: "Centella Light Cleansing Oil",
+            tagline: "Centella and 6 plant-derived oils gently dissolve makeup, sunscreen and excess sebum on the skin, leaving a refreshing, oil-free finish.",
+            description: "Product Benefits: Calming, Hydrating, Mild exfoliating. Skin Type: Normal, Dry, Sensitive.",
+            price: "78dt",
+            originalPrice: "90dt",
+            image: "assets/products/skin1004-cleanser-centella-light-cleansing-oil-38409133490422_1440x.webp",
+            collection: "Centella",
+            sizes: []
+        },
+        {
+            name: "Centella Ampoule Foam",
+            tagline: "A pH-balanced (pH 5) cleanser formulated with coconut-derived surfactants and citric acid that gently cleanses the skin without leaving it feeling dry or tight.",
+            description: "Product Benefits: Calming, Hydrating, Mild exfoliating. Skin Type: Normal, Dry, Sensitive.",
+            price: "63dt",
+            originalPrice: "",
+            image: "assets/products/skin1004-cleanser-madagascar-centella-ampoule-foam-36436059226358_1440x.jpg",
+            collection: "Centella",
+            sizes: []
+        },
+        {
             name: "Centella Travel Kit",
             tagline: "A full Centella skincare routine set with 5 mini-sized products for travel or trial of the Centella line. (Only one left in stock!)",
             description: "",
@@ -213,45 +212,45 @@ var productsData = {
         }
     ],
     "Anua": [
-            {
-                name: "Heartleaf Quercetinol Pore Deep Cleansing Foam",
-                tagline: "A deep-cleansing foam infused with heartleaf and quercetinol.",
-                description: "Formulated with 3,000ppm of Heartleaf Powder and Quercetinol to effectively clean pores and soothe the skin.",
-                price: "62dt",
-                originalPrice: "96dt",
-                image: "assets/products/anua-us-cleanser-150ml-heartleaf-quercetinol-pore-deep-cleansing-foam-1161173162.webp",
-                sizes: []
-            },
-            {
-                name: "Heartleaf Pore Control Cleansing Oil",
-                tagline: "A mild cleansing oil that helps to eliminate blackheads.",
-                description: "This cleansing oil is specially formulated to remove makeup, SPF, and impurities while targeting blackheads and congestion.",
-                price: "80dt",
-                originalPrice: "96dt",
-                image: "assets/products/anua-us-cleanser-200ml-heartleaf-pore-control-cleansing-oil-1161173148.webp",
-                sizes: []
-            }
-        ],
-        "Dr. Althea": [
-            {
-                name: "345 Relief Cream",
-                tagline: "A lightweight regenerating ointment-gel cream for post-acne skin.",
-                description: "Enriched with Niacinamide, Panthenol, and Centella Asiatica for soothing and skin barrier repair.",
-                price: "110dt",
-                originalPrice: "135dt",
-                image: "assets/products/345cream.webp",
-                sizes: []
-            },
-            {
-                name: "147 Barrier Relief Cream",
-                tagline: "A deep-hydrating moisturizer designed to strengthen the skin barrier and provide long-lasting moisture.",
-                description: "Formulated with a seven-layer hyaluronic acid complex and 4 nourishing natural extracts.",
-                price: "110dt",
-                originalPrice: "135dt",
-                image: "assets/products/147cream.webp",
-                sizes: []
-            }
-        ],
+        {
+            name: "Heartleaf Quercetinol Pore Deep Cleansing Foam",
+            tagline: "A deep-cleansing foam infused with heartleaf and quercetinol.",
+            description: "Formulated with 3,000ppm of Heartleaf Powder and Quercetinol to effectively clean pores and soothe the skin.",
+            price: "62dt",
+            originalPrice: "96dt",
+            image: "assets/products/anua-us-cleanser-150ml-heartleaf-quercetinol-pore-deep-cleansing-foam-1161173162.webp",
+            sizes: []
+        },
+        {
+            name: "Heartleaf Pore Control Cleansing Oil",
+            tagline: "A mild cleansing oil that helps to eliminate blackheads.",
+            description: "This cleansing oil is specially formulated to remove makeup, SPF, and impurities while targeting blackheads and congestion.",
+            price: "80dt",
+            originalPrice: "96dt",
+            image: "assets/products/anua-us-cleanser-200ml-heartleaf-pore-control-cleansing-oil-1161173148.webp",
+            sizes: []
+        }
+    ],
+    "Dr. Althea": [
+        {
+            name: "345 Relief Cream",
+            tagline: "A lightweight regenerating ointment-gel cream for post-acne skin.",
+            description: "Enriched with Niacinamide, Panthenol, and Centella Asiatica for soothing and skin barrier repair.",
+            price: "110dt",
+            originalPrice: "135dt",
+            image: "assets/products/345cream.webp",
+            sizes: []
+        },
+        {
+            name: "147 Barrier Relief Cream",
+            tagline: "A deep-hydrating moisturizer designed to strengthen the skin barrier and provide long-lasting moisture.",
+            description: "Formulated with a seven-layer hyaluronic acid complex and 4 nourishing natural extracts.",
+            price: "110dt",
+            originalPrice: "135dt",
+            image: "assets/products/147cream.webp",
+            sizes: []
+        }
+    ],
     "Glow Recipe": [
         {
             name: "Watermelon Glow Niacinamide Dew Drops",
@@ -350,7 +349,7 @@ var productsData = {
         {
             name: "Caffeine Solution 5% + EGCG",
             tagline: "A depuffing solution for tired eyes.",
-            description: "This light-textured formula contains an extremely high 5% concentration of caffeine, supplemented with highly-purified EGCG.",
+            description: "This formula contains an extremely high 5% concentration of caffeine, supplemented with highly-purified EGCG.",
             price: "53dt",
             originalPrice: "",
             image: "assets/products/rdn-caffeine-solution-5pct-egcg-30ml.webp",
