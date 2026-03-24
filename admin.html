@@ -520,6 +520,33 @@
             color: var(--secondary);
             font-size: 0.85rem;
         }
+
+        /* Stock Filters */
+        .stock-filter-btn {
+            padding: 10px 22px;
+            background: white;
+            border: 1.5px solid #eee;
+            border-radius: 50px;
+            color: #666;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .stock-filter-btn.active {
+            background: var(--secondary);
+            color: white;
+            border-color: var(--secondary);
+            box-shadow: 0 4px 15px rgba(139, 74, 80, 0.2);
+        }
+
+        .stock-filter-btn:hover:not(.active) {
+            border-color: var(--primary);
+            background: #fffafa;
+        }
     </style>
 </head>
 
@@ -664,13 +691,22 @@
     <!-- ----- TAB: STOCK ----- -->
     <div id="stockContent" class="tab-content">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-            <h2 style="font-size: 1.8rem; font-weight: 800; color: #333;">📥 Gestion de Stock</h2>
+            <h2 style="font-size: 1.8rem; font-weight: 800; color: #333;" id="stockTitle">📥 Gestion de Stock</h2>
             <div style="display: flex; gap: 15px;">
                 <div
                     style="background: white; padding: 10px 20px; border-radius: 12px; font-weight: 700; color: #8b4a50; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
-                    Total Articles en Stock : <span id="totalStockCount">0</span>
+                    Stock <span id="locationLabel">Global</span> : <span id="totalStockCount">0</span>
                 </div>
             </div>
+        </div>
+
+        <!-- Location Filter Bar -->
+        <div
+            style="display: flex; gap: 12px; margin-bottom: 30px; overflow-x: auto; padding-bottom: 15px; scrollbar-width: none; -ms-overflow-style: none;">
+            <button onclick="renderStock('all')" class="stock-filter-btn active" data-loc="all">🌍 Tous</button>
+            <button onclick="renderStock('Tunisie')" class="stock-filter-btn" data-loc="Tunisie">🇹🇳 Tunisie</button>
+            <button onclick="renderStock('USA')" class="stock-filter-btn" data-loc="USA">🇺🇸 USA</button>
+            <button onclick="renderStock('London')" class="stock-filter-btn" data-loc="London">🇬🇧 London</button>
         </div>
 
         <!-- Loading Skeleton -->
@@ -784,8 +820,12 @@
             }
             await loadProducts(); // Load from Supabase
             fetchOrders(); // Load orders on start
+
+            // Migrate factures from localStorage if any, then fetch
+            await migrateFacturesToSupabase();
+            fetchFactures();
+
             renderProducts();
-            initializeFactures();
             setupRealtime();
 
             // Show migration button if products table is empty (simple check)
@@ -808,27 +848,57 @@
             }
         }
 
-        function initializeFactures() {
-            let data = JSON.parse(localStorage.getItem('aura_supplier_invoices'));
-            // Re-initialize with correct DT conversions
-            if (!data || !data[0]?.amount_dt) {
-                const initial = [
-                    { supplier: "Amazon US (PanOxyl)", date: "2026-03-05", amount: "10.47", currency: "$", rate: 2.90, amount_dt: "30.36", image: "assets/factures/amazon us/amazon (us).jpg", paid: false, canceled: false },
-                    { supplier: "Amazon US (Vitamin Serum)", date: "2026-03-05", amount: "21.19", currency: "$", rate: 2.90, amount_dt: "61.45", image: "assets/factures/amazon us/amazon(us) (2).jpg", paid: false, canceled: false },
-                    { supplier: "Amazon US (Skin1004)", date: "2026-03-01", amount: "59.20", currency: "$", rate: 2.88, amount_dt: "170.50", image: "assets/factures/amazon us/amazon(us).jpg", paid: false, canceled: false },
-                    { supplier: "Amazon London", date: "2026-02-15", amount: "13.44", currency: "£", rate: 3.88, amount_dt: "52.15", image: "assets/factures/amazon (london).jpg", paid: false, canceled: false },
-                    { supplier: "YesStyle London", date: "2026-02-10", amount: "52.63", currency: "£", rate: 3.88, amount_dt: "204.20", image: "assets/factures/yesstyl (london).jpg", paid: false, canceled: true }
-                ];
-                localStorage.setItem('aura_supplier_invoices', JSON.stringify(initial));
-            } else {
-                let updated = false;
-                data.forEach(f => {
-                    if (f.supplier.includes('YesStyle') && f.canceled === undefined) {
-                        f.canceled = true;
-                        updated = true;
-                    }
-                });
-                if (updated) localStorage.setItem('aura_supplier_invoices', JSON.stringify(data));
+        async function fetchFactures() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('factures')
+                    .select('*')
+                    .order('date', { ascending: false });
+
+                if (error) throw error;
+                renderFactures(data || []);
+            } catch (e) {
+                console.error("Error fetching factures:", e);
+                const localData = JSON.parse(localStorage.getItem('aura_supplier_invoices')) || [];
+                renderFactures(localData);
+            }
+        }
+
+        async function migrateFacturesToSupabase() {
+            const localData = JSON.parse(localStorage.getItem('aura_supplier_invoices'));
+            if (!localData || localData.length === 0) return;
+
+            try {
+                const { count, error: countError } = await supabaseClient
+                    .from('factures')
+                    .select('*', { count: 'exact', head: true });
+
+                if (countError) throw countError;
+
+                if (count === 0) {
+                    console.log("Migrating factures to Supabase...");
+                    const { error: insertError } = await supabaseClient
+                        .from('factures')
+                        .insert(localData.map(f => ({
+                            supplier: f.supplier,
+                            date: f.date,
+                            amount: f.amount,
+                            currency: f.currency,
+                            rate: f.rate ? f.rate.toString() : null,
+                            amount_dt: f.amount_dt ? f.amount_dt.toString() : null,
+                            image: f.image,
+                            paid: !!f.paid,
+                            canceled: !!f.canceled
+                        })));
+
+                    if (insertError) throw insertError;
+                    console.log("Migration successful. Clearing local storage.");
+                    localStorage.removeItem('aura_supplier_invoices');
+                } else {
+                    localStorage.removeItem('aura_supplier_invoices');
+                }
+            } catch (e) {
+                console.error("Migration failed:", e);
             }
         }
 
@@ -850,7 +920,7 @@
             } else if (tab === 'factures') {
                 document.querySelector('.tab-btn:nth-child(4)').classList.add('active');
                 document.getElementById('facturesContent').classList.add('active');
-                renderFactures();
+                fetchFactures();
             }
         }
 
@@ -925,6 +995,30 @@
                 alert('Erreur Supabase: ' + (err.message || 'Erreur inconnue'));
                 console.error(err);
                 return false;
+            }
+        }
+
+        async function deleteProduct(brand, pIdx, productId) {
+            const p = productsData[brand][pIdx];
+            if (!confirm(`⚠️ Êtes-vous sûr de vouloir supprimer définitivement "${p.name}" ?\nCette action est irréversible.`)) return;
+
+            try {
+                const { error } = await supabaseClient
+                    .from('products')
+                    .delete()
+                    .eq('id', p.id);
+
+                if (error) throw error;
+
+                // Remove from local data
+                productsData[brand].splice(pIdx, 1);
+                if (productsData[brand].length === 0) delete productsData[brand];
+
+                alert("Produit supprimé avec succès !");
+                renderProducts(); // Refresh UI
+            } catch (err) {
+                alert("Erreur lors de la suppression: " + err.message);
+                console.error(err);
             }
         }
 
@@ -1048,6 +1142,8 @@
                 tagline,
                 description: tagline,
                 status,
+                stock: 0,
+                stock_location: window.currentStockFilter || 'Tunisie',
                 sizes: []
             };
 
@@ -1134,6 +1230,18 @@
                 });
             });
 
+            // Also reload all variants/products for the order dropdowns
+            const allOptions = Object.keys(pData).flatMap(brand =>
+                pData[brand].map(p => `<option value="${brand}|${p.name}">${brand} - ${p.name}</option>`)
+            ).join('');
+
+            // This is a quick fix to make sure order dropdowns stay in sync with newly loaded products
+            document.querySelectorAll('[id^="product-select-"]').forEach(sel => {
+                const currentVal = sel.value;
+                sel.innerHTML = `<option value="">Sélectionner un produit...</option><option value="CUSTOM|CUSTOM">--- Article Personnalisé ---</option>` + allOptions;
+                sel.value = currentVal;
+            });
+
             const renderSection = (title, products, icon, emptyMsg, mode) => {
                 const headerContent = `
                     <div class="product-section-header">
@@ -1179,7 +1287,12 @@
                         : '';
 
                     return `
-                                    <div class="product-card" style="flex-direction:column; align-items:flex-start; gap:12px; padding:20px;">
+                                    <div class="product-card" style="flex-direction:column; align-items:flex-start; gap:12px; padding:20px; position:relative;">
+                                        <button onclick="deleteProduct('${brand}', ${pIdx}, '${productId}')" 
+                                            class="delete-btn" title="Supprimer le produit"
+                                            style="position:absolute; top:15px; right:15px; background:#fff2f3; color:#ff4d4f; border:none; border-radius:10px; width:36px; height:36px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1.1rem; transition:all 0.2s; box-shadow: 0 2px 8px rgba(255, 77, 79, 0.1); z-index:10;">
+                                            ✕
+                                        </button>
                                         <div style="display:flex; gap:15px; align-items:center; width:100%;">
                                             <img src="${p.image}" class="product-img" onerror="this.src='logo.png'" style="width:60px; height:60px;">
                                             <div class="product-info">
@@ -1287,9 +1400,12 @@
 
         function setupRealtime() {
             supabaseClient
-                .channel('orders_channel')
+                .channel('realtime_channel')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
-                    fetchOrders(); // Refresh everything on any change
+                    fetchOrders();
+                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'factures' }, (payload) => {
+                    fetchFactures();
                 })
                 .subscribe();
         }
@@ -1667,18 +1783,16 @@
         }
 
         // --- FACTURES MANAGEMENT ---
-        function renderFactures() {
+        function renderFactures(data) {
             const grid = document.getElementById('factureGrid');
-            const data = JSON.parse(localStorage.getItem('aura_supplier_invoices')) || [];
-
-            if (data.length === 0) {
+            if (!data || data.length === 0) {
                 grid.innerHTML = '<p style="text-align: center; color: #999; margin-top: 50px; grid-column: 1/-1;">Aucune facture enregistrée.</p>';
                 return;
             }
 
             let totalUnpaidDt = 0;
 
-            const cardsHtml = data.map((f, idx) => {
+            const cardsHtml = data.map((f) => {
                 if (!f.paid && !f.canceled && f.amount_dt) {
                     totalUnpaidDt += parseFloat(f.amount_dt);
                 }
@@ -1690,7 +1804,7 @@
                 return `
                                 <div class="facture-card" style="border: ${borderStyle}; opacity: ${f.canceled ? '0.8' : '1'}; position: relative;">
                                     ${f.canceled ? '<div style="position: absolute; top: 10px; right: 10px; color: #F44336; font-weight: bold; border: 2px solid #F44336; padding: 3px 8px; transform: rotate(10deg); font-size: 0.8rem; background: rgba(255,255,255,0.95); border-radius: 5px; z-index: 5; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">ANNULÉ</div>' : ''}
-                                    <button class="btn-delete" onclick="deleteFacture(${idx})" title="Supprimer">✕</button>
+                                    <button class="btn-delete" onclick="deleteFacture('${f.id}')" title="Supprimer">✕</button>
                                     <div class="facture-img-container" onclick="showOverlay('${f.image}')">
                                         <img src="${f.image}" class="facture-img" onerror="this.src='logo.png'">
                                     </div>
@@ -1698,10 +1812,10 @@
                                         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 5px;">
                                             <h4>${f.supplier}</h4>
                                             <div style="display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end;">
-                                                <button onclick="toggleFacturePaid(${idx})" style="padding: 4px 8px; border-radius: 12px; border: none; font-size: 0.7rem; font-weight: bold; cursor: pointer; background: ${f.paid ? '#4CAF50' : '#eee'}; color: ${f.paid ? 'white' : '#666'};">
+                                                <button onclick="toggleFacturePaid('${f.id}', ${f.paid})" style="padding: 4px 8px; border-radius: 12px; border: none; font-size: 0.7rem; font-weight: bold; cursor: pointer; background: ${f.paid ? '#4CAF50' : '#eee'}; color: ${f.paid ? 'white' : '#666'};">
                                                     ${f.paid ? 'Payé ✓' : 'Marquer Payé'}
                                                 </button>
-                                                <button onclick="toggleFactureCanceled(${idx})" style="padding: 4px 8px; border-radius: 12px; border: none; font-size: 0.7rem; font-weight: bold; cursor: pointer; background: ${f.canceled ? '#F44336' : '#eee'}; color: ${f.canceled ? 'white' : '#666'}; margin-top: 4px;">
+                                                <button onclick="toggleFactureCanceled('${f.id}', ${f.canceled})" style="padding: 4px 8px; border-radius: 12px; border: none; font-size: 0.7rem; font-weight: bold; cursor: pointer; background: ${f.canceled ? '#F44336' : '#eee'}; color: ${f.canceled ? 'white' : '#666'}; margin-top: 4px;">
                                                     ${f.canceled ? 'Annulé ✕' : 'Marquer Annulé'}
                                                 </button>
                                             </div>
@@ -1744,76 +1858,122 @@
                 return;
             }
 
-            let imagePath = 'logo.png';
-            if (imgInput.files && imgInput.files[0]) {
-                const file = imgInput.files[0];
-                imagePath = 'assets/factures/' + file.name;
+            const btn = (window.event && window.event.target) ? window.event.target : null;
+            const originalText = btn ? btn.innerText : "Enregistrer";
+            if (btn) {
+                btn.innerText = "⏳ Enregistrement...";
+                btn.disabled = true;
             }
 
-            let amountDt = '';
-            let parsedRate = parseFloat(rateInput);
-            if (!isNaN(parsedRate) && parsedRate > 0) {
-                const parsedAmount = parseFloat(amount.replace(',', '.'));
-                if (!isNaN(parsedAmount)) {
-                    amountDt = (parsedAmount * parsedRate).toFixed(2);
+            try {
+                let imagePath = 'logo.png';
+                if (imgInput.files && imgInput.files[0]) {
+                    const file = imgInput.files[0];
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = `${Date.now()}.${fileExt}`;
+                    const filePath = `invoices/${fileName}`;
+
+                    const { data: uploadData, error: uploadError } = await supabaseClient
+                        .storage
+                        .from('factures')
+                        .upload(filePath, file);
+
+                    if (uploadError) throw uploadError;
+
+                    const { data: { publicUrl } } = supabaseClient
+                        .storage
+                        .from('factures')
+                        .getPublicUrl(filePath);
+
+                    imagePath = publicUrl;
                 }
-            }
 
-            const newFacture = {
-                supplier,
-                date,
-                amount,
-                currency,
-                rate: rateInput || '',
-                amount_dt: amountDt,
-                image: imagePath,
-                paid: false,
-                canceled: false
-            };
+                let amountDt = '';
+                let parsedRate = parseFloat(rateInput);
+                if (!isNaN(parsedRate) && parsedRate > 0) {
+                    const parsedAmount = parseFloat(amount.replace(',', '.'));
+                    if (!isNaN(parsedAmount)) {
+                        amountDt = (parsedAmount * parsedRate).toFixed(2);
+                    }
+                }
 
-            const data = JSON.parse(localStorage.getItem('aura_supplier_invoices')) || [];
-            data.unshift(newFacture);
-            localStorage.setItem('aura_supplier_invoices', JSON.stringify(data));
+                const newFacture = {
+                    supplier,
+                    date,
+                    amount,
+                    currency,
+                    rate: rateInput || '',
+                    amount_dt: amountDt,
+                    image: imagePath,
+                    paid: false,
+                    canceled: false
+                };
 
-            toggleFactureForm();
-            renderFactures();
+                const { error } = await supabaseClient
+                    .from('factures')
+                    .insert([newFacture]);
 
-            // Reset form
-            document.getElementById('fac_supplier').value = '';
-            document.getElementById('fac_date').value = '';
-            document.getElementById('fac_amount').value = '';
-            document.getElementById('fac_rate').value = '';
-            document.getElementById('fac_image').value = '';
-        }
+                if (error) throw error;
 
-        function toggleFacturePaid(idx) {
-            const data = JSON.parse(localStorage.getItem('aura_supplier_invoices')) || [];
-            if (data[idx]) {
-                data[idx].paid = !data[idx].paid;
-                // Si payé, on décochce annulé
-                if (data[idx].paid) data[idx].canceled = false;
-                localStorage.setItem('aura_supplier_invoices', JSON.stringify(data));
-                renderFactures();
-            }
-        }
+                toggleFactureForm();
+                fetchFactures();
 
-        function toggleFactureCanceled(idx) {
-            const data = JSON.parse(localStorage.getItem('aura_supplier_invoices')) || [];
-            if (data[idx]) {
-                data[idx].canceled = !data[idx].canceled;
-                // Si annulé, on décochce payé
-                if (data[idx].canceled) data[idx].paid = false;
-                localStorage.setItem('aura_supplier_invoices', JSON.stringify(data));
-                renderFactures();
+                // Reset form
+                document.getElementById('fac_supplier').value = '';
+                document.getElementById('fac_date').value = '';
+                document.getElementById('fac_amount').value = '';
+                document.getElementById('fac_rate').value = '';
+                document.getElementById('fac_image').value = '';
+            } catch (err) {
+                alert("Erreur: " + err.message);
+                console.error(err);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
             }
         }
 
-        function deleteFacture(idx) {
+        async function toggleFacturePaid(id, currentStatus) {
+            try {
+                const { error } = await supabaseClient
+                    .from('factures')
+                    .update({ paid: !currentStatus, canceled: false })
+                    .eq('id', id);
+
+                if (error) throw error;
+                fetchFactures();
+            } catch (err) {
+                alert("Erreur: " + err.message);
+            }
+        }
+
+        async function toggleFactureCanceled(id, currentStatus) {
+            try {
+                const { error } = await supabaseClient
+                    .from('factures')
+                    .update({ canceled: !currentStatus, paid: false })
+                    .eq('id', id);
+
+                if (error) throw error;
+                fetchFactures();
+            } catch (err) {
+                alert("Erreur: " + err.message);
+            }
+        }
+
+        async function deleteFacture(id) {
             if (!confirm("Supprimer cette facture ?")) return;
-            const data = JSON.parse(localStorage.getItem('aura_supplier_invoices')) || [];
-            data.splice(idx, 1);
-            localStorage.setItem('aura_supplier_invoices', JSON.stringify(data));
-            renderFactures();
+            try {
+                const { error } = await supabaseClient
+                    .from('factures')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+                fetchFactures();
+            } catch (err) {
+                alert("Erreur: " + err.message);
+            }
         }
 
         function showOverlay(src) {
@@ -1834,131 +1994,225 @@
             document.getElementById('totalRevenue').textContent = total.toFixed(2) + ' dt';
         }
 
-        function renderStock() {
+        function renderStock(filterLocation = 'all') {
+            window.currentStockFilter = filterLocation;
             const list = document.getElementById('stockList');
             if (!list) return;
-            const pData = productsData;
 
+            // Update active button UI
+            document.querySelectorAll('.stock-filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-loc') === filterLocation);
+            });
+
+            // Update labels
+            const locLabel = document.getElementById('locationLabel');
+            if (locLabel) locLabel.innerText = filterLocation === 'all' ? 'ÉDITEUR' : `STOCK: ${filterLocation.toUpperCase()}`;
+
+            const pData = productsData;
             let totalStock = 0;
             let html = '';
 
-            Object.keys(pData).forEach(brand => {
-                pData[brand].forEach((p, pIdx) => {
-                    const productId = `${brand}-${pIdx}`.replace(/[^a-z0-9]/gi, '_');
-                    const currentLocation = p.stock_location || 'Tunisie';
+            // --- MODE 1: EDITOR (TOUS) ---
+            if (filterLocation === 'all') {
+                Object.keys(pData).forEach(brand => {
+                    pData[brand].forEach((p, pIdx) => {
+                        const productId = `${brand}-${pIdx}`.replace(/[^a-z0-9]/gi, '_');
 
-                    let sizesStockHtml = '';
-                    let productTotalStock = 0;
-
-                    if (p.sizes && p.sizes.length > 0) {
-                        sizesStockHtml = `<div style="width:100%; margin-top:10px; border-top:1px solid #eee; padding-top:10px;">
-                            <p style="font-size:0.8rem; color:#8b4a50; font-weight:700; margin:10px 0;">Stock par Volume :</p>`;
-
-                        p.sizes.forEach((s, sIdx) => {
-                            const variantStock = s.stock || 0;
-                            productTotalStock += variantStock;
-                            sizesStockHtml += `
-                                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; background:#fafafa; padding:8px; border-radius:8px;">
-                                    <span style="font-size:0.85rem; color:#555; min-width:60px;">${s.label}:</span>
-                                    <div style="display:flex; align-items:center; gap:5px;">
-                                        <button onclick="document.getElementById('stock-${productId}-${sIdx}').stepDown()" style="width:25px; height:25px; border-radius:5px; border:none; background:#eee; cursor:pointer;">-</button>
-                                        <input type="number" id="stock-${productId}-${sIdx}" value="${variantStock}" min="0" style="width:50px; text-align:center; border:1px solid #ddd; border-radius:5px; font-weight:bold; font-size:0.85rem;">
-                                        <button onclick="document.getElementById('stock-${productId}-${sIdx}').stepUp()" style="width:25px; height:25px; border-radius:5px; border:none; background:#eee; cursor:pointer;">+</button>
+                        let qtyInputHtml = '';
+                        if (p.sizes && p.sizes.length > 0) {
+                            qtyInputHtml = `
+                                <div style="width:100%; display:grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap:10px; margin-top:5px; background:#f0f0f0; padding:12px; border-radius:12px;">
+                                    ${p.sizes.map((s, sIdx) => `
+                                        <div style="background:white; padding:8px; border-radius:8px; border:1px solid #eee;">
+                                            <label style="font-size:0.6rem; color:var(--secondary); text-transform:uppercase; font-weight:800; display:block; margin-bottom:4px;">${s.label}</label>
+                                            <div style="display:flex; flex-direction:column; gap:5px;">
+                                                <input type="number" id="dispatch-qty-${productId}-${sIdx}" value="0" min="0" placeholder="Qty"
+                                                    style="width:100%; padding:5px; border-radius:5px; border:1px solid #ddd; font-weight:bold; font-size:0.85rem; text-align:center;">
+                                                <input type="text" id="dispatch-price-${productId}-${sIdx}" placeholder="Achat (dt)" 
+                                                    style="width:100%; padding:5px; border-radius:5px; border:1px solid #ddd; font-size:0.8rem; text-align:center;">
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            `;
+                        } else {
+                            qtyInputHtml = `
+                                <div style="width:100%; display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:5px;">
+                                    <div>
+                                        <label style="font-size:0.7rem; color:#888; text-transform:uppercase; font-weight:700;">Quantité à ajouter</label>
+                                        <input type="number" id="dispatch-qty-${productId}" value="0" min="0" 
+                                            style="width:100%; padding:10px; border-radius:10px; border:1.5px solid #eee; font-weight:bold; font-size:1.1rem; text-align:center;">
                                     </div>
                                 </div>
                             `;
-                        });
-                        sizesStockHtml += `</div>`;
-                    } else {
-                        const currentStock = p.stock || 0;
-                        productTotalStock = currentStock;
-                        sizesStockHtml = `
-                            <div style="display:flex; align-items:center; justify-content:space-between; width:100%; background:white; padding:10px; border-radius:12px; box-shadow:0 2px 5px rgba(0,0,0,0.02); margin-top:10px;">
-                                <span style="font-weight:700; color:#555; font-size:0.9rem;">Quantité :</span>
-                                <div style="display:flex; align-items:center; gap:8px;">
-                                    <button onclick="document.getElementById('stock-${productId}').stepDown()" style="width:30px; height:30px; border-radius:8px; border:none; background:#eee; cursor:pointer; font-weight:bold;">-</button>
-                                    <input type="number" id="stock-${productId}" value="${currentStock}" min="0" style="width:60px; text-align:center; padding:5px; border:1.5px solid #eee; border-radius:8px; font-weight:bold;">
-                                    <button onclick="document.getElementById('stock-${productId}').stepUp()" style="width:30px; height:30px; border-radius:8px; border:none; background:#eee; cursor:pointer; font-weight:bold;">+</button>
+                        }
+
+                        html += `
+                            <div class="product-card" style="flex-direction:column; align-items:flex-start; gap:12px; padding:20px; border:1px dashed #f79da6; background:#fffafa;">
+                                <div style="display:flex; gap:15px; align-items:center; width:100%;">
+                                    <img src="${p.image}" class="product-img" onerror="this.src='logo.png'" style="width:50px; height:50px;">
+                                    <div class="product-info">
+                                        <h5 style="font-size:1rem; margin-bottom:4px;">${p.name}</h5>
+                                        <p style="color:#999; font-size:0.8rem;">${brand}</p>
+                                    </div>
                                 </div>
+                                
+                                <div style="width:100%; display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:5px;">
+                                    ${p.sizes && p.sizes.length > 0 ? '' : qtyInputHtml}
+                                    ${p.sizes && p.sizes.length > 0 ? '' : `
+                                        <div>
+                                            <label style="font-size:0.7rem; color:#888; text-transform:uppercase; font-weight:700;">Prix d'achat (dt)</label>
+                                            <input type="text" id="dispatch-price-${productId}" placeholder="ex: 45" 
+                                                style="width:100%; padding:10px; border-radius:10px; border:1.5px solid #eee; font-weight:bold; font-size:1.1rem; text-align:center;">
+                                        </div>
+                                    `}
+                                    <div style="grid-column: ${p.sizes && p.sizes.length > 0 ? '1 / -1' : 'auto'};">
+                                        <label style="font-size:0.7rem; color:#888; text-transform:uppercase; font-weight:700;">Destination Stock</label>
+                                        <select id="dispatch-loc-${productId}" style="width:100%; padding:10px; border-radius:10px; border:1.5px solid #eee; background:white; font-weight:bold;">
+                                            <option value="Tunisie">🇹🇳 Tunisie</option>
+                                            <option value="USA">🇺🇸 USA</option>
+                                            <option value="London">🇬🇧 London</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                ${p.sizes && p.sizes.length > 0 ? qtyInputHtml : ''}
+                                
+                                <button onclick="dispatchStock('${brand}', ${pIdx}, '${productId}')"
+                                    class="btn-status" style="width:100%; margin-top:5px; background:var(--secondary); padding:12px; font-weight:800;">🚀 AJOUTER AU STOCK</button>
+                                <div id="stock-saved-${productId}" style="display:none; color:#2e7d32; font-size:0.85rem; margin-top:5px; text-align:center; width:100%; font-weight:700;">✓ Ajouté avec succès !</div>
                             </div>
                         `;
-                    }
-
-                    totalStock += productTotalStock;
-
-                    const alertStyle = productTotalStock === 0 ? 'border: 2px solid #ff4444; background: #fff5f5;' : (productTotalStock < 5 ? 'border: 2px solid #ffaa00;' : 'border: 1px solid #fee2e2;');
-
-                    html += `
-                        <div class="product-card" style="flex-direction:column; align-items:flex-start; gap:12px; padding:20px; ${alertStyle}">
-                            <div style="display:flex; gap:15px; align-items:center; width:100%; margin-bottom: 5px;">
-                                <img src="${p.image}" class="product-img" onerror="this.src='logo.png'" style="width:50px; height:50px;">
-                                <div class="product-info">
-                                    <h5 style="font-size:1rem; margin-bottom:4px;">${p.name}</h5>
-                                    <p style="color:#999; font-size:0.8rem;">${brand}</p>
-                                </div>
-                            </div>
-                            
-                            <div style="width:100%; margin-bottom:5px;">
-                                <label style="font-size:0.75rem; color:#999; display:block; margin-bottom:4px;">Emplacement du stock :</label>
-                                <select id="location-${productId}" style="width:100%; padding:8px; border-radius:8px; border:1.5px solid #eee; font-family:inherit; font-size:0.85rem; background:white;">
-                                    <option value="Tunisie" ${currentLocation === 'Tunisie' ? 'selected' : ''}>🇹🇳 Tunisie</option>
-                                    <option value="USA" ${currentLocation === 'USA' ? 'selected' : ''}>🇺🇸 USA</option>
-                                    <option value="France" ${currentLocation === 'France' ? 'selected' : ''}>🇫🇷 France</option>
-                                    <option value="Corée" ${currentLocation === 'Corée' ? 'selected' : ''}>🇰🇷 Corée</option>
-                                </select>
-                            </div>
-
-                            ${sizesStockHtml}
-                            
-                            <button onclick="saveStock('${brand}', ${pIdx}, '${productId}')"
-                                class="btn-status" style="width:100%; margin-top:10px; background:var(--secondary); font-size:0.9rem; padding:10px; box-shadow: 0 4px 10px rgba(139, 74, 80, 0.2);">💾 Enregistrer</button>
-                            <div id="stock-saved-${productId}" style="display:none; color:#2e7d32; font-size:0.85rem; margin-top:5px; text-align:center; width:100%; font-weight:700;">✓ Mis à jour !</div>
-                        </div>
-                    `;
+                    });
                 });
-            });
+            }
+            // --- MODE 2: VIEWER (LOCATIONS) ---
+            else {
+                Object.keys(pData).forEach(brand => {
+                    pData[brand].forEach((p, pIdx) => {
+                        const productId = `${brand}-${pIdx}`.replace(/[^a-z0-9]/gi, '_');
+                        if (p.stock_location !== filterLocation) return;
+
+                        const renderCard = (qty, sizeLabel = null, sizePurchasePrice = null) => {
+                            if (qty <= 0) return ''; // Hide if 0 stock
+
+                            const pPrice = sizePurchasePrice || p.purchase_price;
+                            const priceHtml = pPrice ? `<span style="background:rgba(255,255,255,0.5); padding:2px 8px; border-radius:10px; font-size:0.75rem; color:#888; margin-left:8px;">Achat: ${pPrice}dt</span>` : '';
+
+                            totalStock += qty;
+                            return `
+                                <div class="product-card" style="padding:15px; border-radius:20px; border: 1.5px solid #f79da6; background: white;">
+                                    <div style="display:flex; gap:15px; align-items:center; width:100%; position:relative;">
+                                        <img src="${p.image}" class="product-img" onerror="this.src='logo.png'" style="width:60px; height:60px; border-radius:12px;">
+                                        <div class="product-info">
+                                            <h5 style="font-size:0.95rem; margin-bottom:2px; font-weight:700;">${p.name} ${sizeLabel ? `<br><small style="color:var(--secondary); font-size:0.8rem;">(${sizeLabel})</small>` : ''}</h5>
+                                            <p style="color:#bbb; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">${brand}</p>
+                                        </div>
+                                        <button onclick="reduceOneStock('${brand}', ${pIdx}, '${productId}', '${sizeLabel || ''}')" 
+                                            class="delete-btn" title="Réduire stock" style="background:#fff2f3; color:#f79da6; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:none; cursor:pointer;">✕</button>
+                                    </div>
+                                    <div style="margin-top:12px; display:flex; align-items:center; gap:5px;">
+                                        <span style="font-size:1.4rem; font-weight:800; color:var(--secondary);">${qty} <small style="font-size:0.9rem; font-weight:600; color:#999;">pcs</small></span>
+                                        ${priceHtml}
+                                    </div>
+                                </div>
+                            `;
+                        };
+
+                        if (p.sizes && p.sizes.length > 0) {
+                            p.sizes.forEach(s => html += renderCard(s.stock || 0, s.label, s.purchasePrice));
+                        } else {
+                            html += renderCard(p.stock || 0, null, p.purchase_price);
+                        }
+                    });
+                });
+            }
 
             list.innerHTML = html;
             document.getElementById('totalStockCount').innerText = totalStock;
         }
 
-        async function saveStock(brand, pIdx, productId) {
+        async function dispatchStock(brand, pIdx, productId) {
             const p = productsData[brand][pIdx];
-            const location = document.getElementById(`location-${productId}`).value;
-            let newStock = 0;
+            const priceInput = document.getElementById(`dispatch-price-${productId}`);
+            const locSelect = document.getElementById(`dispatch-loc-${productId}`);
+
+            let addQty = 0;
             let newSizes = null;
 
+            let globalPurchasePrice = null;
             if (p.sizes && p.sizes.length > 0) {
                 newSizes = p.sizes.map((s, sIdx) => {
-                    const val = parseInt(document.getElementById(`stock-${productId}-${sIdx}`).value) || 0;
-                    newStock += val;
-                    return { ...s, stock: val };
+                    const qtyInput = document.getElementById(`dispatch-qty-${productId}-${sIdx}`);
+                    const priceInput = document.getElementById(`dispatch-price-${productId}-${sIdx}`);
+
+                    const addVal = parseInt(qtyInput.value) || 0;
+                    addQty += addVal;
+
+                    let sPrice = priceInput ? priceInput.value.trim().toLowerCase().replace('dt', '').replace(',', '.').trim() : null;
+                    if (sPrice === '' || isNaN(parseFloat(sPrice))) sPrice = null;
+
+                    return {
+                        ...s,
+                        stock: (s.stock || 0) + addVal,
+                        purchasePrice: sPrice || s.purchasePrice || p.purchase_price
+                    };
                 });
             } else {
-                newStock = parseInt(document.getElementById(`stock-${productId}`).value) || 0;
+                const qtyInput = document.getElementById(`dispatch-qty-${productId}`);
+                addQty = parseInt(qtyInput.value) || 0;
+
+                let pPrice = (priceInput && priceInput.value) ? priceInput.value.trim().toLowerCase().replace('dt', '').replace(',', '.').trim() : null;
+                if (pPrice === '' || isNaN(parseFloat(pPrice))) {
+                    globalPurchasePrice = p.purchase_price;
+                } else {
+                    globalPurchasePrice = pPrice;
+                }
             }
 
-            const newStatus = newStock === 0 ? "out-of-stock" : (p.status === "out-of-stock" ? "in-stock" : p.status);
+            const location = locSelect.value;
+
+            if (addQty <= 0) return alert("Veuillez entrer une quantité supérieure à 0");
+
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = "Traitement...";
+            btn.disabled = true;
 
             try {
+                const newStock = (p.stock || 0) + addQty;
+
+                // For now, we update the existing product row
+                // This will maintain ONE entry per row, but we store the latest purchase price
                 const updateData = {
                     stock: newStock,
                     stock_location: location,
-                    status: newStatus
+                    purchase_price: globalPurchasePrice || p.purchase_price,
+                    status: 'in-stock'
                 };
                 if (newSizes) updateData.sizes = newSizes;
 
-                let query = supabaseClient.from('products').update(updateData);
-                if (p.id) query = query.eq('id', p.id);
-                else query = query.eq('name', p.name);
+                const { error } = await supabaseClient
+                    .from('products')
+                    .update(updateData)
+                    .eq('id', p.id);
 
-                const { error } = await query;
                 if (error) throw error;
 
                 p.stock = newStock;
                 p.stock_location = location;
-                p.status = newStatus;
+                p.purchase_price = updateData.purchase_price;
                 if (newSizes) p.sizes = newSizes;
+                if (newSizes) p.sizes = newSizes;
+
+                // Reset Editor (The user's core requirement)
+                if (newSizes) {
+                    p.sizes.forEach((s, sIdx) => {
+                        document.getElementById(`dispatch-qty-${productId}-${sIdx}`).value = 0;
+                    });
+                } else {
+                    document.getElementById(`dispatch-qty-${productId}`).value = 0;
+                }
 
                 const indicator = document.getElementById(`stock-saved-${productId}`);
                 if (indicator) {
@@ -1966,9 +2220,75 @@
                     setTimeout(() => indicator.style.display = 'none', 2500);
                 }
 
-                renderStock();
             } catch (err) {
                 alert('Erreur: ' + err.message);
+                console.error(err);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        async function reduceOneStock(brand, pIdx, productId, targetSize = null) {
+            const p = productsData[brand][pIdx];
+
+            // Re-calculate displayStock correctly for consistent check
+            let currentDisplayStock = p.stock || 0;
+            if (p.sizes && p.sizes.length > 0) {
+                currentDisplayStock = p.sizes.reduce((sum, s) => sum + (s.stock || 0), 0);
+            }
+
+            if (currentDisplayStock <= 0) return;
+
+            // Define what we are reducing
+            let newStock = Math.max(0, currentDisplayStock - 1);
+            let newStatus = newStock === 0 ? 'out-of-stock' : p.status;
+            let newSizes = null;
+
+            if (p.sizes && p.sizes.length > 0) {
+                // If targetSize is provided (new way), use it. 
+                // Otherwise fall back to dropdown (old way, though Viewer now uses new way)
+                const sizeToReduce = targetSize || document.getElementById(`reduce-size-${productId}`)?.value;
+
+                newSizes = p.sizes.map(s => {
+                    if (s.label === sizeToReduce && (s.stock || 0) > 0) {
+                        return { ...s, stock: (s.stock || 0) - 1 };
+                    }
+                    return s;
+                });
+
+                // Ensure newStock is sum of newSizes
+                newStock = newSizes.reduce((sum, s) => sum + (s.stock || 0), 0);
+                newStatus = newStock === 0 ? 'out-of-stock' : p.status;
+            }
+
+            const btn = event.currentTarget;
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '...';
+            btn.disabled = true;
+
+            try {
+                const updateData = { stock: newStock, status: newStatus };
+                if (newSizes) updateData.sizes = newSizes;
+
+                const { error } = await supabaseClient
+                    .from('products')
+                    .update(updateData)
+                    .eq('id', p.id);
+
+                if (error) throw error;
+
+                // Update in-memory
+                p.stock = newStock;
+                p.status = newStatus;
+                if (newSizes) p.sizes = newSizes;
+
+                // Re-render
+                renderStock(window.currentStockFilter);
+            } catch (err) {
+                alert("Erreur lors de la mise à jour : " + err.message);
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
             }
         }
 
