@@ -548,23 +548,68 @@
             background: #fffafa;
         }
 
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+    
         /* Mode Démo - Blurring */
         body.demo-mode-active .blur-sensitive {
-            filter: blur(8px) !important;
+            filter: blur(10px) !important;
+            user-select: none !important;
+            transition: filter 0.4s ease;
+            cursor: help;
+        }
+        
+        /* Secret Hover Reveal: Un-blur briefly when you hover for 0.8s */
+        body.demo-mode-active .blur-sensitive:hover {
+            filter: blur(0px) !important;
+            transition-delay: 0.8s;
+        }
+
+        .demo-badge {
+            display: none;
+            background: #8b4a50;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            margin-right: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 10px rgba(139, 74, 80, 0.2);
+            animation: pulse 2s infinite;
+        }
+        
+        body.demo-mode-active .demo-badge {
+            display: inline-block;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(0.95); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* Mode Démo - Blurring */
+        body.demo-mode-active .blur-sensitive {
+            filter: blur(10px) !important;
             user-select: none !important;
             pointer-events: none !important;
-            transition: filter 0.3s ease;
+            transition: filter 0.4s ease;
         }
         
         .demo-badge {
             display: none;
-            background: #ff4d4f;
+            background: #8b4a50;
             color: white;
-            padding: 3px 10px;
+            padding: 4px 12px;
             border-radius: 50px;
             font-size: 0.65rem;
             font-weight: 800;
-            margin-right: 10px;
+            margin-right: 15px;
             text-transform: uppercase;
             letter-spacing: 1px;
             animation: pulse 2s infinite;
@@ -576,13 +621,27 @@
         
         @keyframes pulse {
             0% { opacity: 1; }
-            50% { opacity: 0.6; }
+            50% { opacity: 0.7; }
             100% { opacity: 1; }
         }
     </style>
+
+    
+
+
+    
+
 </head>
 
 <body>
+
+    
+
+
+
+    
+
+
     <div id="loginScreen"
         style="position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px;">
         <h1 style="color: var(--secondary); margin-bottom: 30px;">AuraSkin Admin</h1>
@@ -598,9 +657,15 @@
     </div>
 
     <div class="header">
-        <div style="display: flex; align-items: center;"><span class="demo-badge">🔒 DÉMO</span><h1>AuraSkin Manager</h1></div>
+        <div style="display: flex; align-items: center;">
+            <span class="demo-badge">Presentation Mode</span>
+            <h1>AuraSkin Manager</h1>
+        </div>
         <div style="display: flex; flex-direction: column; align-items: flex-end;">
-            <button id="demoToggle" onclick="toggleDemo()" style="padding: 5px 12px; border-radius: 50px; border: 1.5px solid #8b4a50; background: #fff; color: #8b4a50; font-size: 0.7rem; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-right: 10px;">👓 Mode Démo</button><div id="connectionStatus" style="font-size: 0.7rem; color: #999;">Connecté 🟢</div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button id="demoToggle" onclick="window.toggleDemo()" style="padding: 5px 12px; border-radius: 50px; border: 1.5px solid #8b4a50; background: #fff; color: #8b4a50; font-size: 0.7rem; font-weight: 700; cursor: pointer; transition: all 0.2s;">👓 Mode Démo</button>
+                <div id="connectionStatus" style="font-size: 0.7rem; color: #999;">Connecté 🟢</div>
+            </div>
             <button id="installBtn"
                 style="display: none; margin-top: 5px; padding: 5px 12px; border-radius: 50px; border: 1.5px solid var(--primary); background: #fff; color: var(--secondary); font-size: 0.7rem; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">Installer
                 l'App 📲</button>
@@ -616,11 +681,11 @@
 
     <div id="ordersContent" class="tab-content active">
         <div class="stats-grid">
-            <div class="stat-card">
+            <div class="stat-card blur-sensitive">
                 <h3>Nouveaux</h3>
-                <p id="todayCount">0</p>
+                <p id="todayCount" class="blur-sensitive">0</p>
             </div>
-            <div class="stat-card">
+            <div class="stat-card blur-sensitive">
                 <h3>Total Ventes</h3>
                 <p id="totalRevenue" class="blur-sensitive">0 dt</p>
             </div>
@@ -653,7 +718,7 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h2 style="font-size: 1.2rem; color: var(--secondary);">Gestion des Produits</h2>
             <div style="display: flex; gap: 10px; align-items: center;">
-                <button onclick="checkMigrationNeeded()"
+                <button onclick="window.checkMigrationNeeded(true)"
                     style="background: none; border: none; color: var(--primary); cursor: pointer; font-size: 0.8rem; text-decoration: underline;">🔄
                     Statut base</button>
             </div>
@@ -727,7 +792,7 @@
             <div style="display: flex; gap: 15px;">
                 <div
                     style="background: white; padding: 10px 20px; border-radius: 12px; font-weight: 700; color: #8b4a50; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
-                    Stock <span id="locationLabel">Global</span> : <span id="totalStockCount">0</span>
+                    Stock <span id="locationLabel">Global</span> : <span id="totalStockCount" class="blur-sensitive">0</span>
                 </div>
             </div>
         </div>
@@ -814,7 +879,36 @@
     </div>
 
     <script>
-        // --- SUPABASE CONFIGURATION ---
+
+        // --- DEMO MODE TOGGLE (CLEAN) ---
+        window.toggleDemo = function() {
+            const isDemo = document.body.classList.toggle('demo-mode-active');
+            localStorage.setItem('demo_mode', isDemo);
+            const btn = document.getElementById('demoToggle');
+            if (btn) {
+                btn.innerHTML = isDemo ? '🔓 Reveal Data' : '👓 Mode Démo';
+                btn.style.background = isDemo ? '#8b4a50' : '#fff';
+                btn.style.color = isDemo ? '#fff' : '#8b4a50';
+            }
+        };
+
+        if (localStorage.getItem('demo_mode') === 'true') {
+            document.body.classList.add('demo-mode-active');
+            window.addEventListener('load', () => {
+                const btn = document.getElementById('demoToggle');
+                if (btn) {
+                    btn.innerHTML = '🔓 Reveal Data';
+                    btn.style.background = '#8b4a50';
+                    btn.style.color = '#fff';
+                }
+            });
+        }
+
+
+
+        
+
+
         const SUPABASE_URL = 'https://tthnppyrrjfbmfjnfqnq.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_8r46Ru1eCBhchCdhzM3hsg_TC_5vZz3';
         const ADMIN_PASSWORD = 'aura_admin_2024'; // Change this to your desired secret password
@@ -864,16 +958,25 @@
             checkMigrationNeeded();
         }
 
-        async function checkMigrationNeeded() {
+        async function checkMigrationNeeded(isManual = false) {
             try {
                 const { count, error } = await supabaseClient
                     .from('products')
                     .select('*', { count: 'exact', head: true });
 
+                const migrationSection = document.getElementById('migrationSection');
+                
+                // If the user clicked manually, ALWAYS show it
+                if (isManual) {
+                    migrationSection.style.display = 'block';
+                    return;
+                }
+
+                // Auto-show only if absolutely empty
                 if (!error && count === 0) {
-                    document.getElementById('migrationSection').style.display = 'block';
+                    migrationSection.style.display = 'block';
                 } else {
-                    document.getElementById('migrationSection').style.display = 'none';
+                    migrationSection.style.display = 'none';
                 }
             } catch (e) {
                 console.error("Migration check failed", e);
@@ -969,7 +1072,7 @@
                 if (data && data.length > 0) {
                     data.forEach(p => {
                         // Case-insensitive brand matching
-                        const brandKey = Object.keys(productsData).find(k => k.toLowerCase() === p.brand.toLowerCase()) || p.brand;
+                        const brandKey = Object.keys(productsData).find(k => k.toLowerCase() === (p.brand || '').toLowerCase()) || p.brand;
 
                         if (!productsData[brandKey]) productsData[brandKey] = [];
 
@@ -1033,6 +1136,16 @@
         async function deleteProduct(brand, pIdx, productId) {
             const p = productsData[brand][pIdx];
             if (!confirm(`⚠️ Êtes-vous sûr de vouloir supprimer définitivement "${p.name}" ?\nCette action est irréversible.`)) return;
+
+            // SAFETY: Do not try to delete from DB if it doesn't have an ID
+            if (!p.id) {
+                if (confirm("⚠️ Ce produit est local uniquement. Voulez-vous le masquer temporairement de votre Manager ? (Il reviendra au prochain rafraîchissement tant qu'il n'est pas migré).")) {
+                    productsData[brand].splice(pIdx, 1);
+                    if (productsData[brand].length === 0) delete productsData[brand];
+                    renderProducts();
+                }
+                return;
+            }
 
             try {
                 const { error } = await supabaseClient
@@ -1311,7 +1424,7 @@
                                         <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
                                             <span style="min-width:60px; color:#777; font-size:0.85rem;">${s.label}:</span>
                                             <input type="text" id="size-price-${productId}-${sIdx}"
-                                                value="${s.price}"
+                                                value="${s.price}" class="blur-sensitive"
                                                 placeholder="ex: 85dt"
                                                 style="flex:1; max-width:120px; padding:8px 12px; border:1.5px solid #eee; border-radius:10px; font-family:inherit; pointer-events: auto;">
                                         </div>
@@ -1349,7 +1462,7 @@
                                                 <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
                                                     <span style="color:#555; font-size:0.85rem; min-width:80px; font-weight:600;">Prix :</span>
                                                     <input type="text" id="price-${productId}"
-                                                        value="${p.price}"
+                                                        value="${p.price}" class="blur-sensitive"
                                                         placeholder="ex: 85dt"
                                                         style="flex:1; max-width:150px; padding:8px 12px; border:1.5px solid #eee; border-radius:10px; font-family:inherit; pointer-events: auto;">
                                                 </div>
@@ -1462,7 +1575,7 @@
                         </div>
                         <div class="customer-info">
                             <h4 class="blur-sensitive">${order.customer_name}</h4>
-                            <p>📍 <span class="blur-sensitive">${order.customer_city}</span>, ${order.customer_address}</p>
+                            <p>📍 <span>${order.customer_city}</span>, ${order.customer_address}</p>
                             <p>📞 <a href="tel:${order.customer_phone}" class="blur-sensitive" style="color: var(--secondary); text-decoration: none;">${order.customer_phone}</a></p>
                             <div style="margin-top: 10px; font-size: 0.85rem; color: #555; background: #fafafa; padding: 10px; border-radius: 10px;">
                                 <strong>Articles :</strong><br>
@@ -1757,25 +1870,37 @@
                                     body {-webkit - print - color - adjust: exact; }
                         }
                         
+        
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+    
         /* Mode Démo - Blurring */
         body.demo-mode-active .blur-sensitive {
-            filter: blur(8px) !important;
+            filter: blur(10px) !important;
             user-select: none !important;
-            pointer-events: none !important;
-            transition: filter 0.3s ease;
+            transition: filter 0.4s ease;
+            cursor: help;
         }
         
+        /* Secret Hover Reveal: Un-blur briefly when you hover for 0.8s */
+        body.demo-mode-active .blur-sensitive:hover {
+            filter: blur(0px) !important;
+            transition-delay: 0.8s;
+        }
+
         .demo-badge {
             display: none;
-            background: #ff4d4f;
+            background: #8b4a50;
             color: white;
-            padding: 3px 10px;
+            padding: 4px 12px;
             border-radius: 50px;
             font-size: 0.65rem;
             font-weight: 800;
-            margin-right: 10px;
+            margin-right: 15px;
             text-transform: uppercase;
             letter-spacing: 1px;
+            box-shadow: 0 4px 10px rgba(139, 74, 80, 0.2);
             animation: pulse 2s infinite;
         }
         
@@ -1784,14 +1909,22 @@
         }
         
         @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.6; }
-            100% { opacity: 1; }
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(0.95); }
+            100% { opacity: 1; transform: scale(1); }
         }
     </style>
-                        </head>
+                        
+    
+
+</head>
                         <body>
+
+    
+
+
                             <div class="header">
+        <div style="display: flex; align-items: center;"><span class="demo-badge">Presentation Mode</span><h1>AuraSkin Manager</h1></div>
                                 <div class="logo">AuraSkin</div>
                                 <p>Reçu de Commande</p>
                             </div>
@@ -1896,8 +2029,8 @@
 
             const totalHtml = `
                                 <div style="grid-column: 1/-1; background: var(--secondary); color: white; padding: 20px; border-radius: 15px; margin-top: 25px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-                                    <h3 style="margin: 0; font-size: 1.2rem; font-weight: 500;">Total Restant à Payer</h3>
-                                    <div class="blur-sensitive" style="font-size: 1.8rem; font-weight: 800;">${totalUnpaidDt.toFixed(2)} dt</div>
+                                    <h3 style="margin: 0; font-size: 1.2rem; font-weight: 500;">Total Restant à Payer</h3><div class="blur-sensitive"
+                                    <div style="font-size: 1.8rem; font-weight: 800;">${totalUnpaidDt.toFixed(2)} dt</div>
                                 </div>
             `;
 
@@ -2161,7 +2294,7 @@
                             if (qty <= 0) return ''; // Hide if 0 stock
 
                             const pPrice = sizePurchasePrice || p.purchase_price;
-                            const priceHtml = pPrice ? `<span style="background:rgba(255,255,255,0.5); padding:2px 8px; border-radius:10px; font-size:0.75rem; color:#888; margin-left:8px;">Achat: ${pPrice}dt</span>` : '';
+                            const priceHtml = pPrice ? `<span style="background:rgba(255,255,255,0.5); padding:2px 8px; border-radius:10px; font-size:0.75rem; color:#888; margin-left:8px;">Achat: <span>${pPrice}dt</span></span>` : '';
 
                             totalStock += qty;
                             return `
@@ -2176,7 +2309,7 @@
                                             class="delete-btn" title="Réduire stock" style="background:#fff2f3; color:#f79da6; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:none; cursor:pointer;">✕</button>
                                     </div>
                                     <div style="margin-top:12px; display:flex; align-items:center; gap:5px;">
-                                        <span style="font-size:1.4rem; font-weight:800; color:var(--secondary);">${qty} <small style="font-size:0.9rem; font-weight:600; color:#999;">pcs</small></span>
+                                        <span style="font-size:1.4rem; font-weight:800; color:var(--secondary);" class="blur-sensitive">${qty} <small style="font-size:0.9rem; font-weight:600; color:#999;">pcs</small></span>
                                         ${priceHtml}
                                     </div>
                                 </div>
@@ -2378,27 +2511,11 @@
             }
         });
     
-        // --- DEMO MODE TOGGLE ---
-        function toggleDemo() {
-            const isDemo = document.body.classList.toggle('demo-mode-active');
-            localStorage.setItem('demo_mode', isDemo);
-            const btn = document.getElementById('demoToggle');
-            if (btn) {
-                if (isDemo) {
-                    btn.innerHTML = '🔓 Voir les données';
-                    btn.style.background = '#8b4a50';
-                    btn.style.color = '#fff';
-                } else {
-                    btn.innerHTML = '👓 Mode Démo';
-                    btn.style.background = '#fff';
-                    btn.style.color = '#8b4a50';
-                }
-            }
-        }
+        
 
         // Apply Demo Mode on load
         if (localStorage.getItem('demo_mode') === 'true') {
-            document.body.classList.add('demo-mode-active');
+            if(document.body){document.body.classList.add('demo-mode-active');}else{window.setTimeout(()=>document.body.classList.add('demo-mode-active'),10);}//('demo-mode-active');
             window.addEventListener('DOMContentLoaded', () => {
                 const btn = document.getElementById('demoToggle');
                 if (btn) {
