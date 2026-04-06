@@ -983,9 +983,8 @@
                 // Auto-show only if absolutely empty
                 if (!error && count === 0) {
                     migrationSection.style.display = 'block';
-                } else {
-                    migrationSection.style.display = 'none';
                 }
+                // REMOVED: No more auto-hiding to ensure the user can find the button.
             } catch (e) {
                 console.error("Migration check failed", e);
             }
