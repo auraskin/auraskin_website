@@ -698,22 +698,30 @@
 
     <div id="productsContent" class="tab-content">
         <div id="migrationSection"
-            style="display:none; background: #fff5f6; padding: 25px; border-radius: 20px; border: 2.5px dashed var(--primary); margin-bottom: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
+            style="background: #fff5f6; padding: 25px; border-radius: 20px; border: 2.5px dashed var(--primary); margin-bottom: 25px; box-shadow: 0 0 20px rgba(139, 74, 80, 0.2); animation: pulseGlow 2s infinite;">
             <h3 style="color: var(--secondary); margin-bottom: 15px; font-size: 1.1rem;">🚀 Initialisation de la base de
                 données</h3>
             <p style="margin-bottom: 20px; font-size: 0.9rem; line-height: 1.5;">Il semble que votre base de données
                 Supabase soit vide ou mal synchronisée. Cette étape est nécessaire pour que vos changements de prix
                 fonctionnent.</p>
             <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-                <button id="migrationBtn" onclick="migrateToSupabase()" class="btn-status"
+                <button id="migrationBtn" onclick="window.migrateToSupabase()" class="btn-status"
                     style="width: auto; padding: 12px 30px; font-size: 1rem; background: var(--primary); border: none; color: white; border-radius: 50px; cursor: pointer; font-weight: 700;">🚀
                     Migrer vers DB</button>
-                <button onclick="forceResetMigration()"
+                <button onclick="window.forceResetMigration()"
                     style="background: none; border: 1px solid #ccc; color: #999; padding: 8px 15px; border-radius: 20px; font-size: 0.75rem; cursor: pointer;">⚠️
                     Tout effacer and Re-migrer</button>
                 <div id="migrationStatus" style="font-size: 0.8rem; color: #999;"></div>
             </div>
         </div>
+
+        <style>
+            @keyframes pulseGlow {
+                0% { box-shadow: 0 0 10px rgba(139, 74, 80, 0.1); }
+                50% { box-shadow: 0 0 25px rgba(139, 74, 80, 0.3); }
+                100% { box-shadow: 0 0 10px rgba(139, 74, 80, 0.1); }
+            }
+        </style>
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h2 style="font-size: 1.2rem; color: var(--secondary);">Gestion des Produits</h2>
