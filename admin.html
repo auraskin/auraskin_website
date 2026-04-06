@@ -698,7 +698,7 @@
 
     <div id="productsContent" class="tab-content">
         <div id="migrationSection"
-            style="background: #fff5f6; padding: 25px; border-radius: 20px; border: 2.5px dashed var(--primary); margin-bottom: 25px; box-shadow: 0 0 20px rgba(139, 74, 80, 0.2); animation: pulseGlow 2s infinite;">
+            style="display:none; background: #fff5f6; padding: 25px; border-radius: 20px; border: 2.5px dashed var(--primary); margin-bottom: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
             <h3 style="color: var(--secondary); margin-bottom: 15px; font-size: 1.1rem;">🚀 Initialisation de la base de
                 données</h3>
             <p style="margin-bottom: 20px; font-size: 0.9rem; line-height: 1.5;">Il semble que votre base de données
@@ -714,14 +714,6 @@
                 <div id="migrationStatus" style="font-size: 0.8rem; color: #999;"></div>
             </div>
         </div>
-
-        <style>
-            @keyframes pulseGlow {
-                0% { box-shadow: 0 0 10px rgba(139, 74, 80, 0.1); }
-                50% { box-shadow: 0 0 25px rgba(139, 74, 80, 0.3); }
-                100% { box-shadow: 0 0 10px rgba(139, 74, 80, 0.1); }
-            }
-        </style>
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h2 style="font-size: 1.2rem; color: var(--secondary);">Gestion des Produits</h2>
@@ -983,8 +975,9 @@
                 // Auto-show only if absolutely empty
                 if (!error && count === 0) {
                     migrationSection.style.display = 'block';
+                } else {
+                    migrationSection.style.display = 'none';
                 }
-                // REMOVED: No more auto-hiding to ensure the user can find the button.
             } catch (e) {
                 console.error("Migration check failed", e);
             }
