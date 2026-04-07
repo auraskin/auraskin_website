@@ -1077,30 +1077,22 @@
                 if (error) throw error;
 
                 if (data && data.length > 0) {
+                    const freshData = {};
                     data.forEach(p => {
-                        // Case-insensitive brand matching
-                        const brandKey = Object.keys(productsData).find(k => k.toLowerCase() === (p.brand || '').toLowerCase()) || p.brand;
-
-                        if (!productsData[brandKey]) productsData[brandKey] = [];
-
-                        // Try to find by ID first (most reliable), then by name
-                        let exists = productsData[brandKey].find(existing => existing.id === p.id);
-                        if (!exists) {
-                            exists = productsData[brandKey].find(existing => existing.name === p.name);
-                        }
-
-                        // Map Supabase fields to frontend fields
-                        const mappedProduct = {
+                        // Normalize brand names to match products.js keys if possible
+                        const brandKey = Object.keys(productsData).find(k => k.toLowerCase() === (p.brand || '').toLowerCase()) || p.brand || 'Interne';
+                        
+                        if (!freshData[brandKey]) freshData[brandKey] = [];
+                        
+                        freshData[brandKey].push({
                             ...p,
                             originalPrice: p.original_price // Map snake_case to camelCase
-                        };
-
-                        if (exists) {
-                            Object.assign(exists, mappedProduct);
-                        } else {
-                            productsData[brandKey].push(mappedProduct);
-                        }
+                        });
                     });
+                    
+                    // CRITICAL: Overwrite with Database data to prevent duplicates and sync IDs
+                    productsData = freshData;
+                    console.log("Products synchronized with Database.");
                 }
             } catch (e) {
                 console.error("Error loading products from Supabase", e);

@@ -2143,18 +2143,15 @@
                 if (error) throw error;
 
                 if (data && data.length > 0) {
+                    const freshData = {};
                     data.forEach(p => {
                         const brand = p.brand || 'Interne';
-                        // Case-insensitive brand matching with existing data
+                        // Keep brand name consistency
                         const brandKey = Object.keys(window.productsData || {}).find(k => k.toLowerCase() === brand.toLowerCase()) || brand;
 
-                        if (!window.productsData) window.productsData = {};
-                        if (!window.productsData[brandKey]) window.productsData[brandKey] = [];
+                        if (!freshData[brandKey]) freshData[brandKey] = [];
 
-                        // Try to find if this product already exists locally by name
-                        let index = window.productsData[brandKey].findIndex(item => item.name === p.name);
-
-                        const mappedProduct = {
+                        freshData[brandKey].push({
                             name: p.name,
                             tagline: p.tagline,
                             description: p.description,
@@ -2164,16 +2161,13 @@
                             collection: p.collection,
                             sizes: p.sizes || [],
                             status: p.status,
-                            id: p.id // Crucial for deletion/tracking
-                        };
-
-                        if (index !== -1) {
-                            window.productsData[brandKey][index] = mappedProduct;
-                        } else {
-                            window.productsData[brandKey].push(mappedProduct);
-                        }
+                            id: p.id
+                        });
                     });
-                    console.log("Supabase products merged successfully.");
+                    
+                    // CRITICAL: Overwrite with Database data to restore collections perfectly
+                    window.productsData = freshData;
+                    console.log("Website synchronized with Database.");
                 }
             } catch (err) {
                 console.error("Migration fallback: loading static products.js", err);
