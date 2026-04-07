@@ -2209,7 +2209,19 @@
             }
         });
 
-        // Trigger loading
+        // --- INITIALIZATION ---
+        // 1. Rebuild index and show local products immediately
+        rebuildSearchIndex();
+        handleRouting();
+
+        // 2. Clear loader if it's there
+        const initialLoader = document.getElementById('loader');
+        if (initialLoader) {
+            initialLoader.style.opacity = '0';
+            setTimeout(() => { initialLoader.style.display = 'none'; }, 500);
+        }
+
+        // 3. Trigger Supabase fetch in the background (will re-render if it finds anything)
         loadDynamicProducts();
 
         // --- CHECKOUT LOGIC ---

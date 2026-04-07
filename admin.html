@@ -945,24 +945,28 @@
                 navigator.serviceWorker.register('./sw-admin.js');
             }
 
-            // Check session 
+            // 1. Check session 
             if (!localStorage.getItem('aura_admin_session')) {
                 window.location.href = 'index.html';
                 return;
             }
 
-            await loadProducts(); // Load from Supabase (merges IDs)
-            await fetchOrders(); // Load orders on start
-
-            // Migrate factures from localStorage if any, then fetch
-            await migrateFacturesToSupabase();
-            await fetchFactures();
-
+            // 2. Render locally available products IMMEDIATELY for speed
             renderProducts();
-            setupRealtime();
-
-            // Show migration button if products table is empty (simple check)
-            await checkMigrationNeeded();
+            
+            // 3. Fetch Supabase updates (IDs, new products) in the background
+            // We use a Promise.all approach to load data without blocking the UI
+            Promise.all([
+                loadProducts(),
+                fetchOrders(),
+                migrateFacturesToSupabase().then(() => fetchFactures())
+            ]).then(() => {
+                // Once database data is merged, do a final re-render to update IDs and stock
+                renderProducts();
+                setupRealtime();
+                checkMigrationNeeded();
+                console.log("Admin Dashboard synchronized with Supabase.");
+            });
         }
 
         async function checkMigrationNeeded(isManual = false) {
