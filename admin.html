@@ -1077,22 +1077,29 @@
                 if (error) throw error;
 
                 if (data && data.length > 0) {
-                    const freshData = {};
                     data.forEach(p => {
-                        // Normalize brand names to match products.js keys if possible
-                        const brandKey = Object.keys(productsData).find(k => k.toLowerCase() === (p.brand || '').toLowerCase()) || p.brand || 'Interne';
+                        // Find the right brand key (case-insensitive)
+                        const brandKey = Object.keys(productsData).find(k => k.toLowerCase() === (p.brand || '').toLowerCase()) || p.brand;
                         
-                        if (!freshData[brandKey]) freshData[brandKey] = [];
+                        if (!productsData[brandKey]) productsData[brandKey] = [];
                         
-                        freshData[brandKey].push({
+                        // Find existing product by name (case-insensitive) to avoid duplicates
+                        let exists = productsData[brandKey].find(item => item.name.toLowerCase() === p.name.toLowerCase());
+                        
+                        const mappedProduct = {
                             ...p,
                             originalPrice: p.original_price // Map snake_case to camelCase
-                        });
+                        };
+
+                        if (exists) {
+                            // Update existing product with DB data (especially the ID)
+                            Object.assign(exists, mappedProduct);
+                        } else {
+                            // Add new product from DB
+                            productsData[brandKey].push(mappedProduct);
+                        }
                     });
-                    
-                    // CRITICAL: Overwrite with Database data to prevent duplicates and sync IDs
-                    productsData = freshData;
-                    console.log("Products synchronized with Database.");
+                    console.log("Database products merged successfully.");
                 }
             } catch (e) {
                 console.error("Error loading products from Supabase", e);
