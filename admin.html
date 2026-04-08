@@ -934,40 +934,47 @@
             }
         }
 
-        // Auto-login if previously authenticated
-        if (localStorage.getItem('admin_auth') === 'true') {
-            document.getElementById('loginScreen').style.display = 'none';
-            init();
-        }
-
         async function init() {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('./sw-admin.js');
-            }
+            try {
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('./sw-admin.js');
+                }
 
-            // 1. Check session 
-            if (!localStorage.getItem('aura_admin_session')) {
-                window.location.href = 'index.html';
-                return;
-            }
+                // 1. Check session 
+                if (!localStorage.getItem('aura_admin_session')) {
+                    window.location.href = 'index.html';
+                    return;
+                }
 
-            // 2. Render locally available products IMMEDIATELY for speed
-            renderProducts();
-            
-            // 3. Fetch Supabase updates (IDs, new products) in the background
-            // We use a Promise.all approach to load data without blocking the UI
-            Promise.all([
-                loadProducts(),
-                fetchOrders(),
-                migrateFacturesToSupabase().then(() => fetchFactures())
-            ]).then(() => {
-                // Once database data is merged, do a final re-render to update IDs and stock
-                renderProducts();
-                setupRealtime();
-                checkMigrationNeeded();
-                console.log("Admin Dashboard synchronized with Supabase.");
-            });
+                // 2. Render locally available products IMMEDIATELY for speed
+                if (typeof renderProducts === 'function') renderProducts();
+                
+                // 3. Fetch Supabase updates (IDs, new products) in the background
+                Promise.all([
+                    loadProducts ? loadProducts() : Promise.resolve(),
+                    fetchOrders ? fetchOrders() : Promise.resolve(),
+                    migrateFacturesToSupabase ? migrateFacturesToSupabase().then(() => fetchFactures ? fetchFactures() : null) : Promise.resolve()
+                ]).then(() => {
+                    // Update UI once background sync is complete
+                    if (typeof renderProducts === 'function') renderProducts();
+                    if (typeof setupRealtime === 'function') setupRealtime();
+                    if (typeof checkMigrationNeeded === 'function') checkMigrationNeeded();
+                    console.log("Admin Dashboard synchronized with Supabase (Instant-Load Mode).");
+                });
+            } catch (err) {
+                console.error("Manager Initialization Error:", err);
+            }
         }
+
+        // --- STARTUP LOGIC ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Auto-login if previously authenticated
+            if (localStorage.getItem('admin_auth') === 'true') {
+                const loginScreen = document.getElementById('loginScreen');
+                if (loginScreen) loginScreen.style.display = 'none';
+                init();
+            }
+        });
 
         async function checkMigrationNeeded(isManual = false) {
             try {

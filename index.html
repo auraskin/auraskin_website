@@ -2209,20 +2209,37 @@
             }
         });
 
-        // --- INITIALIZATION ---
-        // 1. Rebuild index and show local products immediately
-        rebuildSearchIndex();
-        handleRouting();
+        // --- INITIALIZATION (Stability Restore) ---
+        // We wrap this in a check to ensure it doesn't crash the page if data is missing
+        function initializeStore() {
+            try {
+                // 1. Render local products immediately
+                if (typeof rebuildSearchIndex === 'function') rebuildSearchIndex();
+                if (typeof handleRouting === 'function') handleRouting();
 
-        // 2. Clear loader if it's there
-        const initialLoader = document.getElementById('loader');
-        if (initialLoader) {
-            initialLoader.style.opacity = '0';
-            setTimeout(() => { initialLoader.style.display = 'none'; }, 500);
+                // 2. Clear the loading screen
+                const initialLoader = document.getElementById('loader');
+                if (initialLoader) {
+                    initialLoader.style.opacity = '0';
+                    setTimeout(() => { initialLoader.style.display = 'none'; }, 500);
+                }
+
+                // 3. Start the database sync in the background
+                if (typeof loadDynamicProducts === 'function') loadDynamicProducts();
+                
+                console.log("AuraSkin Store initialized successfully (Instant-Load Mode).");
+            } catch (err) {
+                console.error("Critical: Initialization failed. Falling back to basics.", err);
+                if (typeof handleRouting === 'function') handleRouting();
+            }
         }
 
-        // 3. Trigger Supabase fetch in the background (will re-render if it finds anything)
-        loadDynamicProducts();
+        // Start when ready
+        if (document.readyState === 'complete') {
+            initializeStore();
+        } else {
+            window.addEventListener('load', initializeStore);
+        }
 
         // --- CHECKOUT LOGIC ---
         const checkoutOverlay = document.getElementById('checkoutOverlay');
