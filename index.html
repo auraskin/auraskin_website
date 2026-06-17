@@ -6,6 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AuraSkin v2 | Unveil your inner Aura</title>
+    <link rel="icon" type="image/png" href="logo.png?v=2">
     <!-- Fonts -->
     <link
         href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Cormorant+Garamond:wght@700&display=swap"
@@ -2135,6 +2136,9 @@
         async function loadDynamicProducts() {
             const loader = document.getElementById('shopLoader');
             try {
+                if (!supabaseClient) {
+                    throw new Error("Supabase client is not initialized");
+                }
                 const { data, error } = await supabaseClient
                     .from('products')
                     .select('*')
@@ -2183,15 +2187,25 @@
         // --- SUPABASE CONFIGURATION ---
         const SUPABASE_URL = 'https://tthnppyrrjfbmfjnfqnq.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_8r46Ru1eCBhchCdhzM3hsg_TC_5vZz3';
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-            global: {
-                headers: {
-                    'Cache-Control': 'no-cache, no-store, must-revalidate',
-                    'Pragma': 'no-cache',
-                    'Expires': '0'
-                }
+        let supabaseClient = null;
+
+        if (typeof supabase !== 'undefined') {
+            try {
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+                    global: {
+                        headers: {
+                            'Cache-Control': 'no-cache, no-store, must-revalidate',
+                            'Pragma': 'no-cache',
+                            'Expires': '0'
+                        }
+                    }
+                });
+            } catch (e) {
+                console.error("Failed to initialize Supabase client:", e);
             }
-        });
+        } else {
+            console.warn("Supabase library not loaded. Running in offline/local fallback mode.");
+        }
 
         // Trigger loading
         loadDynamicProducts();
@@ -2272,6 +2286,11 @@
 
         checkoutForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+
+            if (!supabaseClient) {
+                alert("Impossible de soumettre la commande en mode hors-ligne. Veuillez vérifier votre connexion internet ou nous contacter sur WhatsApp.");
+                return;
+            }
 
             const submitBtn = checkoutForm.querySelector('.btn-confirm-order');
             submitBtn.textContent = 'Envoi en cours...';

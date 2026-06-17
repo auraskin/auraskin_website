@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AuraSkin Manager | Dashboard</title>
+    <link rel="icon" type="image/png" href="logo.png?v=2">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="manifest" href="manifest-admin.json">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -547,6 +548,51 @@
             border-color: var(--primary);
             background: #fffafa;
         }
+
+        /* --- PRIVACY MODE STYLES --- */
+        body.privacy-mode #totalRevenue,
+        body.privacy-mode #todayCount,
+        body.privacy-mode .customer-info h4,
+        body.privacy-mode .customer-info p,
+        body.privacy-mode .order-total,
+        body.privacy-mode .facture-info h4,
+        body.privacy-mode .facture-total,
+        body.privacy-mode #totalStockCount,
+        body.privacy-mode .product-price-list,
+        body.privacy-mode .product-card input[id^="price-"],
+        body.privacy-mode .product-card input[id^="size-price-"],
+        body.privacy-mode .product-card input[id^="orig-"] {
+            filter: blur(8px);
+            pointer-events: none;
+            user-select: none;
+            transition: filter 0.3s ease;
+        }
+
+        .privacy-toggle-btn {
+            background: #fff;
+            border: 1.5px solid var(--primary);
+            color: var(--secondary);
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
+            margin-right: 10px;
+        }
+
+        .privacy-toggle-btn:hover {
+            background: var(--bg);
+        }
+
+        body.privacy-mode .privacy-toggle-btn {
+            background: var(--secondary);
+            color: #fff;
+            border-color: var(--secondary);
+        }
     </style>
 </head>
 
@@ -564,14 +610,18 @@
                 connecter</button>
         </div>
     </div>
-
     <div class="header">
         <h1>AuraSkin Manager</h1>
-        <div style="display: flex; flex-direction: column; align-items: flex-end;">
-            <div id="connectionStatus" style="font-size: 0.7rem; color: #999;">Connecté 🟢</div>
-            <button id="installBtn"
-                style="display: none; margin-top: 5px; padding: 5px 12px; border-radius: 50px; border: 1.5px solid var(--primary); background: #fff; color: var(--secondary); font-size: 0.7rem; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">Installer
-                l'App 📲</button>
+        <div style="display: flex; align-items: center;">
+            <button onclick="togglePrivacyMode()" class="privacy-toggle-btn" id="privacyBtn">
+                <span id="privacyIcon">🔓</span> <span id="privacyText">Public</span>
+            </button>
+            <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                <div id="connectionStatus" style="font-size: 0.7rem; color: #999;">Connexion... ⏳</div>
+                <button id="installBtn"
+                    style="display: none; margin-top: 5px; padding: 5px 12px; border-radius: 50px; border: 1.5px solid var(--primary); background: #fff; color: var(--secondary); font-size: 0.7rem; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">Installer
+                    l'App 📲</button>
+            </div>
         </div>
     </div>
 
@@ -761,8 +811,8 @@
                     <input type="text" id="fac_rate" placeholder="ex: 2.90">
                 </div>
                 <div class="form-group">
-                    <label>Image de la facture</label>
-                    <input type="file" id="fac_image" accept="image/*">
+                    <label>Images de la facture (une ou plusieurs)</label>
+                    <input type="file" id="fac_image" accept="image/*" multiple>
                 </div>
             </div>
             <div style="display: flex; gap: 10px;">
@@ -785,17 +835,51 @@
         // --- SUPABASE CONFIGURATION ---
         const SUPABASE_URL = 'https://tthnppyrrjfbmfjnfqnq.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_8r46Ru1eCBhchCdhzM3hsg_TC_5vZz3';
-        const ADMIN_PASSWORD = 'aura_admin_2024'; // Change this to your desired secret password
+        const ADMIN_PASSWORD = 'auraskin'; // Admin password
 
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-            global: {
-                headers: {
-                    'Cache-Control': 'no-cache, no-store, must-revalidate',
-                    'Pragma': 'no-cache',
-                    'Expires': '0'
-                }
+        let supabaseClient = null;
+        if (typeof supabase !== 'undefined') {
+            try {
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+                    global: {
+                        headers: {
+                            'Cache-Control': 'no-cache, no-store, must-revalidate',
+                            'Pragma': 'no-cache',
+                            'Expires': '0'
+                        }
+                    }
+                });
+            } catch (e) {
+                console.error("Failed to initialize Supabase client:", e);
             }
-        });
+        } else {
+            console.warn("Supabase library not loaded. Running in offline/local fallback mode.");
+        }
+
+        // --- PRIVACY MODE LOGIC ---
+        function togglePrivacyMode() {
+            const isPrivacy = document.body.classList.toggle('privacy-mode');
+            localStorage.setItem('privacy_mode', isPrivacy);
+            updatePrivacyUI(isPrivacy);
+        }
+
+        function updatePrivacyUI(isPrivacy) {
+            const icon = document.getElementById('privacyIcon');
+            const text = document.getElementById('privacyText');
+            if (isPrivacy) {
+                icon.innerText = '🔒';
+                text.innerText = 'Privé';
+            } else {
+                icon.innerText = '🔓';
+                text.innerText = 'Public';
+            }
+        }
+
+        // Initialize Privacy Mode from Storage
+        if (localStorage.getItem('privacy_mode') === 'true') {
+            document.body.classList.add('privacy-mode');
+            updatePrivacyUI(true);
+        }
 
         function checkPassword() {
             const pass = document.getElementById('adminPassword').value;
@@ -814,12 +898,51 @@
             init();
         }
 
+        async function checkConnection() {
+            const statusEl = document.getElementById('connectionStatus');
+            if (!supabaseClient) {
+                statusEl.textContent = 'Hors ligne 🔴';
+                statusEl.style.color = '#e74c3c';
+                return false;
+            }
+            try {
+                const { error } = await supabaseClient.from('products').select('*', { count: 'exact', head: true });
+                if (error) throw error;
+                statusEl.textContent = 'Connectée 🟢';
+                statusEl.style.color = '#27ae60';
+                return true;
+            } catch (e) {
+                statusEl.textContent = 'Erreur DB 🔴';
+                statusEl.style.color = '#e74c3c';
+                console.error('Connection check failed:', e);
+                return false;
+            }
+        }
+
         async function init() {
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('./sw-admin.js');
             }
-            await loadProducts(); // Load from Supabase
-            fetchOrders(); // Load orders on start
+
+            const isConnected = await checkConnection();
+
+            if (!isConnected) {
+                // Show a non-blocking offline banner
+                showOfflineBanner();
+                // Still render local products from products.js
+                renderProducts();
+                document.getElementById('orderList').innerHTML = `
+                    <div style="text-align:center; padding: 40px 20px;">
+                        <div style="font-size:3rem; margin-bottom:15px;">📶</div>
+                        <p style="color:#e74c3c; font-weight:700; margin-bottom:10px;">Base de données inaccessible</p>
+                        <p style="color:#999; font-size:0.9rem; margin-bottom:20px;">Le projet Supabase est probablement en pause.<br>Connectez-vous sur <a href="https://supabase.com" target="_blank" style="color:var(--primary);">supabase.com</a> et relancez le projet.</p>
+                        <button onclick="location.reload()" style="padding:10px 25px;border-radius:20px;border:none;background:var(--primary);color:#fff;cursor:pointer;font-weight:700;">🔄 Réessayer</button>
+                    </div>`;
+                return;
+            }
+
+            await loadProducts();
+            fetchOrders();
 
             // Migrate factures from localStorage if any, then fetch
             await migrateFacturesToSupabase();
@@ -830,6 +953,23 @@
 
             // Show migration button if products table is empty (simple check)
             checkMigrationNeeded();
+        }
+
+        function showOfflineBanner() {
+            const existing = document.getElementById('offlineBanner');
+            if (existing) return;
+            const banner = document.createElement('div');
+            banner.id = 'offlineBanner';
+            banner.style.cssText = 'background:#fff3cd;border:1.5px solid #ffc107;border-radius:15px;padding:12px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;';
+            banner.innerHTML = `
+                <span style="font-size:0.85rem;color:#856404;">⚠️ <strong>Mode hors-ligne</strong> — Supabase est inaccessible. Les produits affichés sont les données locales.</span>
+                <div style="display:flex;gap:10px;">
+                    <a href="https://supabase.com" target="_blank" style="font-size:0.8rem;padding:6px 14px;border-radius:20px;background:#ffc107;border:none;color:#000;cursor:pointer;font-weight:700;text-decoration:none;">Ouvrir Supabase</a>
+                    <button onclick="location.reload()" style="font-size:0.8rem;padding:6px 14px;border-radius:20px;background:#fff;border:1px solid #ccc;cursor:pointer;">Réessayer</button>
+                </div>`;
+            // Insert before tabs
+            const tabs = document.querySelector('.tabs');
+            if (tabs) tabs.parentNode.insertBefore(banner, tabs);
         }
 
         async function checkMigrationNeeded() {
@@ -927,6 +1067,11 @@
         // Load products from Supabase
         async function loadProducts() {
             try {
+                // CLEAR the baseline data to avoid "Ghost" products from the hardcoded products.js
+                for (const key in productsData) {
+                    delete productsData[key];
+                }
+
                 const { data, error } = await supabaseClient
                     .from('products')
                     .select('*')
@@ -936,28 +1081,14 @@
 
                 if (data && data.length > 0) {
                     data.forEach(p => {
-                        // Case-insensitive brand matching
                         const brandKey = Object.keys(productsData).find(k => k.toLowerCase() === p.brand.toLowerCase()) || p.brand;
-
                         if (!productsData[brandKey]) productsData[brandKey] = [];
 
-                        // Try to find by ID first (most reliable), then by name
-                        let exists = productsData[brandKey].find(existing => existing.id === p.id);
-                        if (!exists) {
-                            exists = productsData[brandKey].find(existing => existing.name === p.name);
-                        }
-
-                        // Map Supabase fields to frontend fields
                         const mappedProduct = {
                             ...p,
-                            originalPrice: p.original_price // Map snake_case to camelCase
+                            originalPrice: p.original_price
                         };
-
-                        if (exists) {
-                            Object.assign(exists, mappedProduct);
-                        } else {
-                            productsData[brandKey].push(mappedProduct);
-                        }
+                        productsData[brandKey].push(mappedProduct);
                     });
                 }
             } catch (e) {
@@ -998,27 +1129,51 @@
             }
         }
 
-        async function deleteProduct(brand, pIdx, productId) {
-            const p = productsData[brand][pIdx];
-            if (!confirm(`⚠️ Êtes-vous sûr de vouloir supprimer définitivement "${p.name}" ?\nCette action est irréversible.`)) return;
+        async function deleteProduct(productId, productName) {
+            // Case 1: Ghost Product (No ID in database)
+            if (!productId || productId === 'undefined' || productId === '') {
+                if (confirm(`Ce produit semble déjà être supprimé de la base de données. Voulez-vous le retirer de votre affichage ?`)) {
+                    removeLocalProductByName(productName);
+                    renderProducts();
+                }
+                return;
+            }
+            
+            if (!confirm(`⚠️ Êtes-vous sûr de vouloir supprimer définitivement "${productName}" ?\nCette action est irréversible.`)) return;
 
             try {
                 const { error } = await supabaseClient
                     .from('products')
                     .delete()
-                    .eq('id', p.id);
+                    .eq('id', productId);
 
                 if (error) throw error;
 
-                // Remove from local data
-                productsData[brand].splice(pIdx, 1);
-                if (productsData[brand].length === 0) delete productsData[brand];
+                // Remove from local data searching all brands
+                for (const brand in productsData) {
+                    const idx = productsData[brand].findIndex(p => p.id === productId);
+                    if (idx !== -1) {
+                        productsData[brand].splice(idx, 1);
+                        if (productsData[brand].length === 0) delete productsData[brand];
+                        break;
+                    }
+                }
 
                 alert("Produit supprimé avec succès !");
                 renderProducts(); // Refresh UI
             } catch (err) {
                 alert("Erreur lors de la suppression: " + err.message);
                 console.error(err);
+            }
+        }
+
+        function removeLocalProductByName(name) {
+            for (const brand in productsData) {
+                const idx = productsData[brand].findIndex(p => p.name === name);
+                if (idx !== -1) {
+                    productsData[brand].splice(idx, 1);
+                    if (productsData[brand].length === 0) delete productsData[brand];
+                }
             }
         }
 
@@ -1220,7 +1375,9 @@
             const internalProducts = [];
 
             Object.keys(pData).forEach(brand => {
+                if (!pData[brand]) return;
                 pData[brand].forEach((p, pIdx) => {
+                    if (!p) return;
                     const productWithMeta = { ...p, brand, pIdx };
                     if (p.status === 'hidden') {
                         internalProducts.push(productWithMeta);
@@ -1271,8 +1428,7 @@
                         <div class="order-list">
                             ${products.map(p => {
                     const brand = p.brand;
-                    const pIdx = p.pIdx;
-                    const productId = `${brand}-${pIdx}`.replace(/[^a-z0-9]/gi, '_');
+                    const productId = (p.id || "").replace(/[^a-z0-9]/gi, '_');
 
                     const sizesHtml = p.sizes && p.sizes.length > 0
                         ? p.sizes.map((s, sIdx) => `
@@ -1288,7 +1444,7 @@
 
                     return `
                                     <div class="product-card" style="flex-direction:column; align-items:flex-start; gap:12px; padding:20px; position:relative;">
-                                        <button onclick="deleteProduct('${brand}', ${pIdx}, '${productId}')" 
+                                        <button onclick="deleteProduct('${p.id}', '${p.name.replace(/'/g, "\\'")}')" 
                                             class="delete-btn" title="Supprimer le produit"
                                             style="position:absolute; top:15px; right:15px; background:#fff2f3; color:#ff4d4f; border:none; border-radius:10px; width:36px; height:36px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1.1rem; transition:all 0.2s; box-shadow: 0 2px 8px rgba(255, 77, 79, 0.1); z-index:10;">
                                             ✕
@@ -1329,7 +1485,7 @@
                                                         style="flex:1; max-width:150px; padding:8px 12px; border:1.5px solid #eee; border-radius:10px; font-family:inherit; color:#999; pointer-events: auto;">
                                                 </div>
                                             `}
-                                            <button onclick="handleSavePrice('${brand}', ${pIdx}, '${productId}')"
+                                            <button onclick="handleSavePrice('${p.id}')"
                                                 class="btn-status" style="width:100%; margin-top:15px; background:var(--secondary); font-size:0.9rem; padding:12px; box-shadow: 0 4px 10px rgba(139, 74, 80, 0.2);">💾 Sauvegarder</button>
                                             <div id="saved-${productId}" style="display:none; color:#2e7d32; font-size:0.85rem; margin-top:10px; text-align:center; width:100%; font-weight:700;">✓ Changements enregistrés !</div>
                                         </div>
@@ -1348,33 +1504,38 @@
             `;
         }
 
-        async function handleSavePrice(brand, pIdx, productId) {
-            const p = productsData[brand][pIdx];
+        async function handleSavePrice(productId) {
+            let p = null;
+            for (const b in productsData) {
+                p = productsData[b].find(item => item.id === productId);
+                if (p) break;
+            }
+            if (!p) return alert("Erreur: Produit introuvable.");
+
+            const divId = p.id.replace(/[^a-z0-9]/gi, '_');
             let newSizes = null;
 
             if (p.sizes && p.sizes.length > 0) {
                 newSizes = p.sizes.map((s, sIdx) => {
-                    const input = document.getElementById(`size-price-${productId}-${sIdx}`);
+                    const input = document.getElementById(`size-price-${divId}-${sIdx}`);
                     return { ...s, price: input ? input.value.trim() : s.price };
                 });
-                // Update in-memory too
-                productsData[brand][pIdx].sizes = newSizes;
+                p.sizes = newSizes;
             }
 
-            const priceEl = document.getElementById(`price-${productId}`);
-            const origEl = document.getElementById(`orig-${productId}`);
+            const priceEl = document.getElementById(`price-${divId}`);
+            const origEl = document.getElementById(`orig-${divId}`);
             const newPrice = priceEl ? priceEl.value.trim() : p.price;
             const newOriginal = origEl ? origEl.value.trim() : (p.originalPrice || p.original_price || '');
-            const newStatus = document.getElementById(`status-${productId}`)?.value || 'in-stock';
+            const newStatus = document.getElementById(`status-${divId}`)?.value || 'in-stock';
 
-            // Update in-memory
             p.price = newPrice;
             p.originalPrice = newOriginal;
             p.status = newStatus;
 
             const ok = await saveProductPrice(p.name, newPrice, newOriginal, newSizes, newStatus, p.id);
             if (ok) {
-                const indicator = document.getElementById(`saved-${productId}`);
+                const indicator = document.getElementById(`saved-${divId}`);
                 if (indicator) {
                     indicator.style.display = 'block';
                     setTimeout(() => indicator.style.display = 'none', 2500);
@@ -1384,18 +1545,25 @@
 
 
         async function fetchOrders() {
-            const { data, error } = await supabaseClient
-                .from('orders')
-                .select('*')
-                .order('created_at', { ascending: false });
-
-            if (error) {
-                console.error("Error fetching orders:", error);
+            const list = document.getElementById('orderList');
+            if (!supabaseClient) {
+                list.innerHTML = '<p style="text-align:center;color:#e74c3c;margin-top:50px;">⚠️ Pas de connexion à la base de données.</p>';
                 return;
             }
+            try {
+                const { data, error } = await supabaseClient
+                    .from('orders')
+                    .select('*')
+                    .order('created_at', { ascending: false });
 
-            renderOrders(data);
-            updateStats(data);
+                if (error) throw error;
+
+                renderOrders(data);
+                updateStats(data);
+            } catch (err) {
+                console.error("Error fetching orders:", err);
+                list.innerHTML = `<p style="text-align:center;color:#e74c3c;margin-top:50px;">⚠️ Erreur lors du chargement des commandes.<br><small style="color:#999;">${err.message || ''}</small><br><br><button onclick="fetchOrders()" style="padding:10px 20px;border-radius:20px;border:none;background:var(--primary);color:#fff;cursor:pointer;font-weight:700;">🔄 Réessayer</button></p>`;
+            }
         }
 
         function setupRealtime() {
@@ -1805,8 +1973,9 @@
                                 <div class="facture-card" style="border: ${borderStyle}; opacity: ${f.canceled ? '0.8' : '1'}; position: relative;">
                                     ${f.canceled ? '<div style="position: absolute; top: 10px; right: 10px; color: #F44336; font-weight: bold; border: 2px solid #F44336; padding: 3px 8px; transform: rotate(10deg); font-size: 0.8rem; background: rgba(255,255,255,0.95); border-radius: 5px; z-index: 5; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">ANNULÉ</div>' : ''}
                                     <button class="btn-delete" onclick="deleteFacture('${f.id}')" title="Supprimer">✕</button>
-                                    <div class="facture-img-container" onclick="showOverlay('${f.image}')">
-                                        <img src="${f.image}" class="facture-img" onerror="this.src='logo.png'">
+                                    <div class="facture-img-container" onclick="showOverlay('${f.image}')" style="position: relative;">
+                                        <img src="${f.image ? f.image.split(',')[0] : 'logo.png'}" class="facture-img" onerror="this.src='logo.png'">
+                                        ${f.image && f.image.split(',').length > 1 ? `<span style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold;">+${f.image.split(',').length - 1} photos</span>` : ''}
                                     </div>
                                     <div class="facture-info">
                                         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 5px;">
@@ -1867,25 +2036,29 @@
 
             try {
                 let imagePath = 'logo.png';
-                if (imgInput.files && imgInput.files[0]) {
-                    const file = imgInput.files[0];
-                    const fileExt = file.name.split('.').pop();
-                    const fileName = `${Date.now()}.${fileExt}`;
-                    const filePath = `invoices/${fileName}`;
+                if (imgInput.files && imgInput.files.length > 0) {
+                    let imagePaths = [];
+                    for (let i = 0; i < imgInput.files.length; i++) {
+                        const file = imgInput.files[i];
+                        const fileExt = file.name.split('.').pop();
+                        const fileName = `${Date.now()}_${i}.${fileExt}`;
+                        const filePath = `invoices/${fileName}`;
 
-                    const { data: uploadData, error: uploadError } = await supabaseClient
-                        .storage
-                        .from('factures')
-                        .upload(filePath, file);
+                        const { data: uploadData, error: uploadError } = await supabaseClient
+                            .storage
+                            .from('factures')
+                            .upload(filePath, file);
 
-                    if (uploadError) throw uploadError;
+                        if (uploadError) throw uploadError;
 
-                    const { data: { publicUrl } } = supabaseClient
-                        .storage
-                        .from('factures')
-                        .getPublicUrl(filePath);
+                        const { data: { publicUrl } } = supabaseClient
+                            .storage
+                            .from('factures')
+                            .getPublicUrl(filePath);
 
-                    imagePath = publicUrl;
+                        imagePaths.push(publicUrl);
+                    }
+                    imagePath = imagePaths.join(',');
                 }
 
                 let amountDt = '';
@@ -1978,8 +2151,27 @@
 
         function showOverlay(src) {
             const overlay = document.getElementById('imgOverlay');
-            const img = document.getElementById('overlayImg');
-            img.src = src;
+            overlay.innerHTML = '';
+            
+            const container = document.createElement('div');
+            container.style.cssText = "max-height: 95vh; width: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; align-items: center; padding: 40px 20px; cursor: default;";
+            container.onclick = (e) => {
+                if (e.target === container) {
+                    overlay.style.display = 'none';
+                }
+            };
+            
+            const urls = src ? src.split(',') : [];
+            urls.forEach(url => {
+                const img = document.createElement('img');
+                img.src = url;
+                img.style.cssText = "max-width: 90%; max-height: 90vh; border-radius: 10px; box-shadow: 0 0 50px rgba(0,0,0,0.5); cursor: zoom-out;";
+                img.onclick = () => { overlay.style.display = 'none'; };
+                img.onerror = function() { this.src = 'logo.png'; };
+                container.appendChild(img);
+            });
+            
+            overlay.appendChild(container);
             overlay.style.display = 'flex';
         }
 
@@ -2078,7 +2270,7 @@
 
                                 ${p.sizes && p.sizes.length > 0 ? qtyInputHtml : ''}
                                 
-                                <button onclick="dispatchStock('${brand}', ${pIdx}, '${productId}')"
+                                <button onclick="dispatchStock('${p.id}')"
                                     class="btn-status" style="width:100%; margin-top:5px; background:var(--secondary); padding:12px; font-weight:800;">🚀 AJOUTER AU STOCK</button>
                                 <div id="stock-saved-${productId}" style="display:none; color:#2e7d32; font-size:0.85rem; margin-top:5px; text-align:center; width:100%; font-weight:700;">✓ Ajouté avec succès !</div>
                             </div>
@@ -2091,10 +2283,10 @@
                 Object.keys(pData).forEach(brand => {
                     pData[brand].forEach((p, pIdx) => {
                         const productId = `${brand}-${pIdx}`.replace(/[^a-z0-9]/gi, '_');
-                        if (p.stock_location !== filterLocation) return;
-
+                        
+                        // New Logic: Check all sizes for stock in this location
                         const renderCard = (qty, sizeLabel = null, sizePurchasePrice = null) => {
-                            if (qty <= 0) return ''; // Hide if 0 stock
+                            if (qty <= 0) return ''; // Hide if 0 stock in this location
 
                             const pPrice = sizePurchasePrice || p.purchase_price;
                             const priceHtml = pPrice ? `<span style="background:rgba(255,255,255,0.5); padding:2px 8px; border-radius:10px; font-size:0.75rem; color:#888; margin-left:8px;">Achat: ${pPrice}dt</span>` : '';
@@ -2105,10 +2297,10 @@
                                     <div style="display:flex; gap:15px; align-items:center; width:100%; position:relative;">
                                         <img src="${p.image}" class="product-img" onerror="this.src='logo.png'" style="width:60px; height:60px; border-radius:12px;">
                                         <div class="product-info">
-                                            <h5 style="font-size:0.95rem; margin-bottom:2px; font-weight:700;">${p.name} ${sizeLabel ? `<br><small style="color:var(--secondary); font-size:0.8rem;">(${sizeLabel})</small>` : ''}</h5>
+                                            <h5 style="font-size:0.95rem; margin-bottom:2px; font-weight:700;">${p.name} ${sizeLabel && sizeLabel !== 'Standard' ? `<br><small style="color:var(--secondary); font-size:0.8rem;">(${sizeLabel})</small>` : ''}</h5>
                                             <p style="color:#bbb; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">${brand}</p>
                                         </div>
-                                        <button onclick="reduceOneStock('${brand}', ${pIdx}, '${productId}', '${sizeLabel || ''}')" 
+                                        <button onclick="reduceOneStock('${p.id}', '${sizeLabel || 'Standard'}')" 
                                             class="delete-btn" title="Réduire stock" style="background:#fff2f3; color:#f79da6; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:none; cursor:pointer;">✕</button>
                                     </div>
                                     <div style="margin-top:12px; display:flex; align-items:center; gap:5px;">
@@ -2119,10 +2311,17 @@
                             `;
                         };
 
+                        const locKey = filterLocation === 'Tunisie' ? 'stock_tn' : (filterLocation === 'London' ? 'stock_uk' : 'stock_us');
+
                         if (p.sizes && p.sizes.length > 0) {
-                            p.sizes.forEach(s => html += renderCard(s.stock || 0, s.label, s.purchasePrice));
+                            p.sizes.forEach(s => {
+                                const q = s[locKey] || 0;
+                                html += renderCard(q, s.label, s.purchasePrice);
+                            });
                         } else {
-                            html += renderCard(p.stock || 0, null, p.purchase_price);
+                            // Fallback for old simple-stock products
+                            const q = (p.stock_location === filterLocation) ? (p.stock || 0) : 0;
+                            html += renderCard(q, null, p.purchase_price);
                         }
                     });
                 });
@@ -2132,17 +2331,17 @@
             document.getElementById('totalStockCount').innerText = totalStock;
         }
 
-        async function dispatchStock(brand, pIdx, productId) {
+         async function dispatchStock(brand, pIdx, productId) {
             const p = productsData[brand][pIdx];
-            const priceInput = document.getElementById(`dispatch-price-${productId}`);
             const locSelect = document.getElementById(`dispatch-loc-${productId}`);
+            const location = locSelect.value;
+            const locKey = location === 'Tunisie' ? 'stock_tn' : (location === 'London' ? 'stock_uk' : 'stock_us');
 
             let addQty = 0;
-            let newSizes = null;
+            let updatedSizes = p.sizes && p.sizes.length > 0 ? [...p.sizes] : [{ label: 'Standard', price: p.price, stock: 0, stock_tn: 0, stock_uk: 0, stock_us: 0 }];
 
-            let globalPurchasePrice = null;
             if (p.sizes && p.sizes.length > 0) {
-                newSizes = p.sizes.map((s, sIdx) => {
+                updatedSizes = updatedSizes.map((s, sIdx) => {
                     const qtyInput = document.getElementById(`dispatch-qty-${productId}-${sIdx}`);
                     const priceInput = document.getElementById(`dispatch-price-${productId}-${sIdx}`);
 
@@ -2154,23 +2353,23 @@
 
                     return {
                         ...s,
-                        stock: (s.stock || 0) + addVal,
+                        [locKey]: (s[locKey] || 0) + addVal,
+                        stock: (s.stock_tn || 0) + (s.stock_uk || 0) + (s.stock_us || 0) + addVal,
                         purchasePrice: sPrice || s.purchasePrice || p.purchase_price
                     };
                 });
             } else {
                 const qtyInput = document.getElementById(`dispatch-qty-${productId}`);
+                const priceInput = document.getElementById(`dispatch-price-${productId}`);
                 addQty = parseInt(qtyInput.value) || 0;
 
                 let pPrice = (priceInput && priceInput.value) ? priceInput.value.trim().toLowerCase().replace('dt', '').replace(',', '.').trim() : null;
-                if (pPrice === '' || isNaN(parseFloat(pPrice))) {
-                    globalPurchasePrice = p.purchase_price;
-                } else {
-                    globalPurchasePrice = pPrice;
-                }
-            }
+                if (pPrice === '' || isNaN(parseFloat(pPrice))) pPrice = p.purchase_price;
 
-            const location = locSelect.value;
+                updatedSizes[0][locKey] = (updatedSizes[0][locKey] || 0) + addQty;
+                updatedSizes[0].stock = (updatedSizes[0].stock_tn || 0) + (updatedSizes[0].stock_uk || 0) + (updatedSizes[0].stock_us || 0);
+                updatedSizes[0].purchasePrice = pPrice;
+            }
 
             if (addQty <= 0) return alert("Veuillez entrer une quantité supérieure à 0");
 
@@ -2180,45 +2379,30 @@
             btn.disabled = true;
 
             try {
-                const newStock = (p.stock || 0) + addQty;
-
-                // For now, we update the existing product row
-                // This will maintain ONE entry per row, but we store the latest purchase price
-                const updateData = {
-                    stock: newStock,
-                    stock_location: location,
-                    purchase_price: globalPurchasePrice || p.purchase_price,
-                    status: 'in-stock'
-                };
-                if (newSizes) updateData.sizes = newSizes;
-
+                const totalStock = updatedSizes.reduce((sum, s) => sum + (s.stock || 0), 0);
                 const { error } = await supabaseClient
                     .from('products')
-                    .update(updateData)
+                    .update({
+                        stock: totalStock,
+                        sizes: updatedSizes,
+                        status: 'in-stock'
+                    })
                     .eq('id', p.id);
 
                 if (error) throw error;
 
-                p.stock = newStock;
-                p.stock_location = location;
-                p.purchase_price = updateData.purchase_price;
-                if (newSizes) p.sizes = newSizes;
-                if (newSizes) p.sizes = newSizes;
+                p.stock = totalStock;
+                p.sizes = updatedSizes;
 
-                // Reset Editor (The user's core requirement)
-                if (newSizes) {
-                    p.sizes.forEach((s, sIdx) => {
-                        document.getElementById(`dispatch-qty-${productId}-${sIdx}`).value = 0;
-                    });
-                } else {
-                    document.getElementById(`dispatch-qty-${productId}`).value = 0;
-                }
+                // Reset inputs
+                document.querySelectorAll(`[id^="dispatch-qty-${productId}"]`).forEach(i => i.value = 0);
 
                 const indicator = document.getElementById(`stock-saved-${productId}`);
                 if (indicator) {
                     indicator.style.display = 'block';
                     setTimeout(() => indicator.style.display = 'none', 2500);
                 }
+                renderStock(window.currentStockFilter);
 
             } catch (err) {
                 alert('Erreur: ' + err.message);
