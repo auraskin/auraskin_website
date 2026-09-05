@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraSkin Database Audit</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
+        .duplicate { background-color: #ffebee; }
+        .lost { background-color: #fff3e0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.8rem; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>AuraSkin Database Audit Tool</h1>
+    <div id="status">Connecting to Supabase...</div>
+    <div id="summary"></div>
+    <table id="resultsTable" style="display:none;">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Brand</th>
+                <th>Name</th>
+                <th>Collection</th>
+                <th>Stock</th>
+                <th>Location</th>
+            </tr>
+        </thead>
+        <tbody id="resultsBody"></tbody>
+    </table>
+
+    <script>
+        const SUPABASE_URL = 'https://tthnppyrrjfbmfjnfqnq.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_8r46Ru1eCBhchCdhzM3hsg_TC_5vZz3';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function runAudit() {
+            const status = document.getElementById('status');
+            const body = document.getElementById('resultsBody');
+            const table = document.getElementById('resultsTable');
+            const summary = document.getElementById('summary');
+
+            try {
+                const { data, error } = await supabase.from('products').select('*');
+                if (error) throw error;
+
+                status.innerText = `Audit Complete. Found ${data.length} entries.`;
+                table.style.display = 'table';
+
+                const counts = {};
+                data.forEach(p => {
+                    const key = `${p.brand}|${p.name}`;
+                    counts[key] = (counts[key] || 0) + 1;
+                });
+
+                let duplicates = 0;
+                data.forEach(p => {
+                    const key = `${p.brand}|${p.name}`;
+                    const isDuplicate = counts[key] > 1;
+                    if (isDuplicate) duplicates++;
+
+                    const tr = document.createElement('tr');
+                    if (isDuplicate) tr.classList.add('duplicate');
+                    
+                    tr.innerHTML = `
+                        <td><code>${p.id}</code></td>
+                        <td>${p.brand}</td>
+                        <td>${p.name}</td>
+                        <td>${p.collection || ''}</td>
+                        <td>${p.stock || 0}</td>
+                        <td>${p.stock_location || ''}</td>
+                    `;
+                    body.appendChild(tr);
+                });
+
+                summary.innerHTML = `
+                    <p><strong>Duplicates Found:</strong> ${duplicates} (multiple entries with same name/brand)</p>
+                    <p><strong>Total Rows:</strong> ${data.length}</p>
+                `;
+
+            } catch (err) {
+                status.innerText = 'Error: ' + err.message;
+                console.error(err);
+            }
+        }
+
+        runAudit();
+    </script>
+</body>
+</html>

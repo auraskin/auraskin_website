@@ -384,5 +384,16 @@ var productsData = {
             image: "assets/products/eqb_cream.webp",
             sizes: []
         }
+    ],
+    "Beauty of Joseon": [
+        {
+            name: "Placeholder",
+            tagline: "Coming soon",
+            description: "Products coming soon.",
+            price: "",
+            originalPrice: "",
+            image: "",
+            sizes: []
+        }
     ]
 };

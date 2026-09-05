@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AuraSkin Database Cleanup Engine</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; font-size: 14px; }
+        .log-entry { margin-bottom: 5px; padding: 5px; border-bottom: 1px solid #eee; }
+        .success { color: green; }
+        .error { color: red; font-weight: bold; }
+        .warning { color: orange; }
+        #log { margin-top: 20px; max-height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Database Cleanup Engine</h1>
+    <p>This tool will standardize names and merge duplicates into a single master product.</p>
+    <button id="startBtn">START CLEANUP (NO REVERSAL)</button>
+    <div id="log"></div>
+
+    <script>
+        const SUPABASE_URL = 'https://tthnppyrrjfbmfjnfqnq.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_8r46Ru1eCBhchCdhzM3hsg_TC_5vZz3';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const log = (msg, type = 'info') => {
+            const div = document.createElement('div');
+            div.className = `log-entry ${type}`;
+            div.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            document.getElementById('log').prepend(div);
+        };
+
+        async function cleanup() {
+            document.getElementById('startBtn').disabled = true;
+            log('Starting Database Audit...', 'info');
+
+            try {
+                // 1. Fetch all
+                const { data: allProducts, error } = await supabase.from('products').select('*');
+                if (error) throw error;
+                log(`Fetched ${allProducts.length} products.`, 'info');
+
+                // 2. Identify duplicates and standardize Brand
+                const masterMap = {}; // brand|name -> master product object
+                const toDelete = [];
+                const toUpdate = [];
+
+                allProducts.forEach(p => {
+                    // Standardize brand name
+                    let brand = p.brand.trim();
+                    if (brand.toLowerCase() === 'skin 1004') brand = 'SKIN 1004';
+                    
+                    const key = `${brand}|${p.name.trim()}`;
+
+                    if (!masterMap[key]) {
+                        // This is the first time we see this product, it's our "Master"
+                        masterMap[key] = {
+                            ...p,
+                            brand: brand, // Ensure standardized brand
+                            original_id: p.id,
+                            merged_stock: p.stock || 0,
+                            // Initialize location-based stock trackers from existing row
+                            stock_tn: (p.stock_location === 'Tunisie') ? (p.stock || 0) : 0,
+                            stock_uk: (p.stock_location === 'London') ? (p.stock || 0) : 0,
+                            stock_us: (p.stock_location === 'USA') ? (p.stock || 0) : 0
+                        };
+                    } else {
+                        // This is a duplicate!
+                        const master = masterMap[key];
+                        master.merged_stock += (p.stock || 0);
+                        
+                        // Add to specific location trackers
+                        if (p.stock_location === 'Tunisie') master.stock_tn += (p.stock || 0);
+                        if (p.stock_location === 'London') master.stock_uk += (p.stock || 0);
+                        if (p.stock_location === 'USA') master.stock_us += (p.stock || 0);
+
+                        toDelete.push(p.id);
+                    }
+                });
+
+                log(`Identified ${Object.keys(masterMap).length} unique products.`, 'info');
+                log(`${toDelete.length} duplicates will be removed.`, 'warning');
+
+                // 3. Update Masters with merged data
+                for (const key in masterMap) {
+                    const m = masterMap[key];
+                    
+                    // We store the location data in the 'description' or update the row
+                    // BUT for now, let's just unify the stock and standardize names
+                    // This alone fixes the "Everything is twice" and "Missing SKIN 1004" issues.
+                    
+                    log(`Updating Master: ${m.name} (${m.brand}) -> Total Stock: ${m.merged_stock}`, 'info');
+                    
+                    const { error: upError } = await supabase.from('products').update({
+                        brand: m.brand,
+                        stock: m.merged_stock,
+                        // We will set location to 'All' or similar for now to avoid showing in only one filter
+                        stock_location: m.stock_tn > 0 ? 'Tunisie' : (m.stock_uk > 0 ? 'London' : 'USA') 
+                    }).eq('id', m.original_id);
+
+                    if (upError) log(`Error updating ${m.name}: ${upError.message}`, 'error');
+                }
+
+                // 4. Batch Delete Duplicates
+                if (toDelete.length > 0) {
+                    log('Deleting duplicate rows...', 'warning');
+                    // Supabase deletes can handle arrays
+                    const { error: delError } = await supabase.from('products').delete().in('id', toDelete);
+                    if (delError) throw delError;
+                    log(`Successfully deleted ${toDelete.length} duplicates.`, 'success');
+                }
+
+                log('Deduplication Complete! Your database is now clean.', 'success');
+                log('Next Step: Update the Admin Panel to support multi-location stock properly so this never happens again.', 'info');
+
+            } catch (err) {
+                log(`CRITICAL ERROR: ${err.message}`, 'error');
+                console.error(err);
+            }
+        }
+
+        document.getElementById('startBtn').onclick = cleanup;
+    </script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AuraSkin Keepalive</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <pre id="log">AuraSkin Supabase Keepalive — pinging...</pre>
+    <script>
+        const SUPABASE_URL = 'https://tthnppyrrjfbmfjnfqnq.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_8r46Ru1eCBhchCdhzM3hsg_TC_5vZz3';
+        const log = document.getElementById('log');
+
+        (async () => {
+            try {
+                const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                const { count, error } = await client
+                    .from('products')
+                    .select('id', { count: 'exact' });
+
+                if (error) throw error;
+
+                const msg = `✅ Supabase is ALIVE — ${count} products in DB\nPinged at: ${new Date().toISOString()}`;
+                log.textContent = msg;
+                console.log(msg);
+            } catch (e) {
+                const msg = `❌ Supabase is DOWN or PAUSED\nError: ${e.message}\nTime: ${new Date().toISOString()}\n\nGo to https://supabase.com/dashboard to restore your project.`;
+                log.textContent = msg;
+                console.error(msg);
+            }
+        })();
+    </script>
+</body>
+</html>

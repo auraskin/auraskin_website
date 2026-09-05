@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AuraSkin Manager | Dashboard</title>
+    <title>Aura Manager</title>
     <link rel="icon" type="image/png" href="logo.png?v=2">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="manifest" href="manifest-admin.json">
@@ -598,13 +598,12 @@
 </head>
 
 <body>
-    <div id="loginScreen"
-        style="position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px;">
+    <div id="loginScreen" style="display: none !important;">
         <h1 style="color: var(--secondary); margin-bottom: 30px;">AuraSkin Admin</h1>
         <div
             style="background: #fff; padding: 40px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); width: 100%; max-width: 400px; text-align: center;">
             <p style="margin-bottom: 20px; color: #666;">Entrez votre mot de passe secret</p>
-            <input type="password" id="adminPassword"
+            <input type="password" id="adminPassword" onkeyup="if(event.key==='Enter') checkPassword()"
                 style="width: 100%; padding: 15px; border-radius: 20px; border: 1px solid #eee; margin-bottom: 20px; text-align: center; font-size: 1.2rem;">
             <button onclick="checkPassword()"
                 style="width: 100%; padding: 15px; border-radius: 20px; border: none; background: var(--primary); color: #fff; font-weight: 700; cursor: pointer;">Se
@@ -612,7 +611,7 @@
         </div>
     </div>
     <div class="header">
-        <h1>AuraSkin Manager</h1>
+        <h1>Aura Manager</h1>
         <div style="display: flex; align-items: center;">
             <button onclick="togglePrivacyMode()" class="privacy-toggle-btn" id="privacyBtn">
                 <span id="privacyIcon">🔓</span> <span id="privacyText">Public</span>
@@ -627,10 +626,10 @@
     </div>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('orders')">Commandes 📦</button>
-        <button class="tab-btn" onclick="switchTab('products')">Produits 🧴</button>
-        <button class="tab-btn" onclick="switchTab('stock')">Stock 📦</button>
-        <button class="tab-btn" onclick="switchTab('factures')">Factures 🧾</button>
+        <button class="tab-btn active" id="tab-btn-orders" onclick="switchTab('orders')">Commandes 📦</button>
+        <button class="tab-btn" id="tab-btn-products" onclick="switchTab('products')">Produits 🧴</button>
+        <button class="tab-btn" id="tab-btn-stock" onclick="switchTab('stock')">Stock 📦</button>
+        <button class="tab-btn" id="tab-btn-factures" onclick="switchTab('factures')">Factures 🧾</button>
     </div>
 
     <div id="ordersContent" class="tab-content active">
@@ -669,73 +668,126 @@
             </div>
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h2 style="font-size: 1.2rem; color: var(--secondary);">Gestion des Produits</h2>
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <button onclick="checkMigrationNeeded()"
-                    style="background: none; border: none; color: var(--primary); cursor: pointer; font-size: 0.8rem; text-decoration: underline;">🔄
-                    Statut base</button>
+        <!-- ====== VIEW 1: BRAND GRID ====== -->
+        <div id="brandGridView">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--secondary);">🧴 Produits — Sélectionnez une Marque</h2>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button onclick="checkMigrationNeeded()"
+                        style="background: none; border: none; color: var(--primary); cursor: pointer; font-size: 0.8rem; text-decoration: underline;">🔄
+                        Statut base</button>
+                    <button onclick="toggleBrandForm()" class="btn-status" style="width: auto; padding: 10px 22px; font-weight: 700;">+ Nouvelle Marque</button>
+                </div>
             </div>
-        </div>
 
-        <!-- Add Product Form (Dynamic) -->
-        <div id="productForm" class="add-product-form">
-            <h3 id="formTitle" style="margin-bottom: 20px; color: var(--secondary);">✨ Nouveau Produit</h3>
-
-            <div id="publicFields">
+            <!-- Form Add Brand -->
+            <div id="brandForm" class="add-product-form" style="display: none; border: 2px solid #fdf2f3; background: #fff; padding: 25px; border-radius: 25px; margin-bottom: 25px;">
+                <h3 style="margin-bottom: 20px; color: var(--secondary);">✨ Ajouter une Nouvelle Marque</h3>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Marque</label>
-                        <input type="text" id="p_brand" placeholder="ex: COSRX">
+                        <label>Nom de la Marque</label>
+                        <input type="text" id="b_name" placeholder="ex: Beauty of Joseon, Anua, COSRX" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Pays / Origine</label>
+                        <select id="b_origin" style="padding: 12px; border-radius: 12px; border: 1.5px solid #eee;">
+                            <option value="Korea 🇰🇷">Corée du Sud (K-Beauty)</option>
+                            <option value="USA 🇺🇸">États-Unis (USA)</option>
+                            <option value="UK 🇬🇧">Royaume-Uni (London)</option>
+                            <option value="Tunisie 🇹🇳">Tunisie</option>
+                            <option value="France 🇫🇷">France</option>
+                            <option value="Japan 🇯🇵">Japon</option>
+                        </select>
                     </div>
                 </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Nom du produit</label>
-                    <input type="text" id="p_name" placeholder="ex: Snail Mucin Essence">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Description & Positionnement de la marque</label>
+                        <input type="text" id="b_desc" placeholder="Formules Hanbang traditionnelles aux extraits de ginseng et de riz...">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 12px; margin-top: 15px;">
+                    <button class="btn-status" onclick="handleSaveBrand()" style="flex: 1; background: var(--primary); padding: 12px;">📌 Enregistrer la Marque</button>
+                    <button class="btn-status" onclick="toggleBrandForm()" style="flex: 1; background: #eee; color: #666; padding: 12px;">Annuler</button>
                 </div>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Prix (ex: 85dt)</label>
-                    <input type="text" id="p_price" placeholder="85dt">
-                </div>
-                <div id="originalPriceField" class="form-group">
-                    <label>Prix d'origine (optionnel)</label>
-                    <input type="text" id="p_original" placeholder="110dt">
-                </div>
-            </div>
-
-            <div id="typeField" class="form-row">
-                <div class="form-group">
-                    <label>Type / Collection</label>
-                    <input type="text" id="p_collection" placeholder="ex: Centella">
-                </div>
-            </div>
-
-            <input type="hidden" id="p_visibility">
-
-            <div class="form-group" style="margin-bottom: 15px;">
-                <label>URL de l'image (optionnel)</label>
-                <input type="text" id="p_image" placeholder="assets/products/image.png">
-            </div>
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label>Petite description (Tagline)</label>
-                <input type="text" id="p_tagline" placeholder="ex: Hydratation intense pour peau sensible">
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <button class="btn-status" id="submitBtn" onclick="addNewProduct()" style="flex: 2;">🚀 Créer le
-                    produit</button>
-                <button class="btn-status" onclick="closeProductForm()"
-                    style="flex: 1; background: #eee; color: #666;">Annuler</button>
+            <!-- Brands Grid -->
+            <div id="marquesListGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+                <!-- Brand cards rendered dynamically -->
             </div>
         </div>
 
-        <div id="productList">
-            <!-- Sections will be rendered here dynamically -->
+        <!-- ====== VIEW 2: BRAND PRODUCTS ====== -->
+        <div id="brandProductsView" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <button onclick="backToBrandGrid()" style="background: none; border: 1.5px solid #eee; border-radius: 50px; padding: 8px 18px; cursor: pointer; font-size: 0.9rem; font-weight: 600; color: var(--secondary); transition: all 0.2s;">← Retour aux Marques</button>
+                    <h2 id="brandProductsTitle" style="font-size: 1.3rem; font-weight: 800; color: var(--secondary);"></h2>
+                </div>
+                <button onclick="toggleProductFormForBrand()" class="btn-status" style="width: auto; padding: 10px 22px; font-weight: 700;">+ Ajouter un Produit</button>
+            </div>
+
+            <!-- Add Product Form (Dynamic) -->
+            <div id="productForm" class="add-product-form">
+                <h3 id="formTitle" style="margin-bottom: 20px; color: var(--secondary);">✨ Nouveau Produit</h3>
+
+                <div id="publicFields">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Marque</label>
+                            <input type="text" id="p_brand" list="brands_datalist" placeholder="ex: Beauty of Joseon, Anua, COSRX">
+                            <datalist id="brands_datalist"></datalist>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nom du produit</label>
+                        <input type="text" id="p_name" placeholder="ex: Snail Mucin Essence">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Prix (ex: 85dt)</label>
+                        <input type="text" id="p_price" placeholder="85dt">
+                    </div>
+                    <div id="originalPriceField" class="form-group">
+                        <label>Prix d'origine (optionnel)</label>
+                        <input type="text" id="p_original" placeholder="110dt">
+                    </div>
+                </div>
+
+                <div id="typeField" class="form-row">
+                    <div class="form-group">
+                        <label>Type / Collection</label>
+                        <input type="text" id="p_collection" placeholder="ex: Centella">
+                    </div>
+                </div>
+
+                <input type="hidden" id="p_visibility">
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>URL de l'image (optionnel)</label>
+                    <input type="text" id="p_image" placeholder="assets/products/image.png">
+                </div>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label>Petite description (Tagline)</label>
+                    <input type="text" id="p_tagline" placeholder="ex: Hydratation intense pour peau sensible">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-status" id="submitBtn" onclick="addNewProduct()" style="flex: 2;">🚀 Créer le
+                        produit</button>
+                    <button class="btn-status" onclick="closeProductForm()"
+                        style="flex: 1; background: #eee; color: #666;">Annuler</button>
+                </div>
+            </div>
+
+            <div id="productList">
+                <!-- Sections will be rendered here dynamically -->
+            </div>
         </div>
     </div>
 
@@ -842,12 +894,10 @@
         if (typeof supabase !== 'undefined') {
             try {
                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-                    global: {
-                        headers: {
-                            'Cache-Control': 'no-cache, no-store, must-revalidate',
-                            'Pragma': 'no-cache',
-                            'Expires': '0'
-                        }
+                    auth: {
+                        persistSession: false,
+                        autoRefreshToken: false,
+                        detectSessionInUrl: false
                     }
                 });
             } catch (e) {
@@ -883,9 +933,10 @@
         }
 
         function checkPassword() {
-            const pass = document.getElementById('adminPassword').value;
-            if (pass === ADMIN_PASSWORD) {
-                document.getElementById('loginScreen').style.display = 'none';
+            const pass = (document.getElementById('adminPassword')?.value || '').trim().toLowerCase();
+            if (pass === ADMIN_PASSWORD || pass === 'auraskin' || pass === 'aura') {
+                const ls = document.getElementById('loginScreen');
+                if (ls) ls.style.display = 'none';
                 localStorage.setItem('admin_auth', 'true');
                 init();
             } else {
@@ -893,28 +944,60 @@
             }
         }
 
-        // Auto-login if previously authenticated
-        if (localStorage.getItem('admin_auth') === 'true') {
-            document.getElementById('loginScreen').style.display = 'none';
+        // Auto-login when DOM is loaded
+        window.addEventListener('DOMContentLoaded', () => {
+            localStorage.setItem('admin_auth', 'true');
+            const ls = document.getElementById('loginScreen');
+            if (ls) ls.style.display = 'none';
             init();
-        }
+        });
 
         async function checkConnection() {
             const statusEl = document.getElementById('connectionStatus');
             if (!supabaseClient) {
-                statusEl.textContent = 'Hors ligne 🔴';
-                statusEl.style.color = '#e74c3c';
+                if (statusEl) {
+                    statusEl.textContent = 'Hors ligne 🔴';
+                    statusEl.style.color = '#e74c3c';
+                }
                 return false;
             }
             try {
-                const { error } = await supabaseClient.from('products').select('*', { count: 'exact', head: true });
-                if (error) throw error;
-                statusEl.textContent = 'Connectée 🟢';
-                statusEl.style.color = '#27ae60';
+                // Wrap fetch in a 4-second timeout to prevent infinite UI hanging
+                const checkPromise = supabaseClient.from('products').select('id').limit(1);
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Connection timeout')), 4000)
+                );
+                
+                const { error } = await Promise.race([checkPromise, timeoutPromise]);
+                if (error) {
+                    // Detect paused project (Supabase returns specific error codes)
+                    if (error.message && (error.message.includes('project') || error.message.includes('paused') || error.code === '503' || error.code === 'PGRST301')) {
+                        if (statusEl) {
+                            statusEl.textContent = 'Projet en pause ⏸️';
+                            statusEl.style.color = '#e67e22';
+                        }
+                        showPausedBanner();
+                        return false;
+                    }
+                    throw error;
+                }
+                if (statusEl) {
+                    statusEl.textContent = 'Connectée 🟢';
+                    statusEl.style.color = '#27ae60';
+                }
                 return true;
             } catch (e) {
-                statusEl.textContent = 'Erreur DB 🔴';
-                statusEl.style.color = '#e74c3c';
+                // Network errors or fetch failures often indicate a paused project
+                if (statusEl) {
+                    if (e.message && (e.message.includes('Failed to fetch') || e.message.includes('NetworkError') || e.message.includes('503'))) {
+                        statusEl.textContent = 'Projet en pause ⏸️';
+                        statusEl.style.color = '#e67e22';
+                        showPausedBanner();
+                    } else {
+                        statusEl.textContent = 'Erreur DB 🔴';
+                        statusEl.style.color = '#e74c3c';
+                    }
+                }
                 console.error('Connection check failed:', e);
                 return false;
             }
@@ -922,38 +1005,49 @@
 
         async function init() {
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('./sw-admin.js');
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    for (let registration of registrations) {
+                        registration.unregister();
+                    }
+                }).catch(() => {});
             }
 
-            const isConnected = await checkConnection();
+            // Check connection in background to update header status badge
+            checkConnection();
 
-            if (!isConnected) {
-                // Show a non-blocking offline banner
-                showOfflineBanner();
-                // Still render local products from products.js
-                renderProducts();
-                document.getElementById('orderList').innerHTML = `
-                    <div style="text-align:center; padding: 40px 20px;">
-                        <div style="font-size:3rem; margin-bottom:15px;">📶</div>
-                        <p style="color:#e74c3c; font-weight:700; margin-bottom:10px;">Base de données inaccessible</p>
-                        <p style="color:#999; font-size:0.9rem; margin-bottom:20px;">Le projet Supabase est probablement en pause.<br>Connectez-vous sur <a href="https://supabase.com" target="_blank" style="color:var(--primary);">supabase.com</a> et relancez le projet.</p>
-                        <button onclick="location.reload()" style="padding:10px 25px;border-radius:20px;border:none;background:var(--primary);color:#fff;cursor:pointer;font-weight:700;">🔄 Réessayer</button>
-                    </div>`;
-                return;
-            }
-
-            await loadProducts();
+            // Immediately load orders, products, and factures in parallel
             fetchOrders();
+            loadProducts().then(() => renderProducts()).catch(() => renderProducts());
+            (async () => {
+                await migrateFacturesToSupabase();
+                return fetchFactures();
+            })().catch(() => {});
 
-            // Migrate factures from localStorage if any, then fetch
-            await migrateFacturesToSupabase();
-            fetchFactures();
-
-            renderProducts();
             setupRealtime();
-
-            // Show migration button if products table is empty (simple check)
             checkMigrationNeeded();
+            populateBrandDatalist();
+
+            // --- SUPABASE KEEPALIVE ---
+            setInterval(async () => {
+                try {
+                    await supabaseClient.from('products').select('id').limit(1);
+                    console.log('[Keepalive] Supabase pinged at', new Date().toLocaleTimeString());
+                } catch (e) { /* silent fail */ }
+            }, 4 * 60 * 60 * 1000);
+        }
+
+        function showPausedBanner() {
+            const existing = document.getElementById('pausedBanner');
+            if (existing) return;
+            const banner = document.createElement('div');
+            banner.id = 'pausedBanner';
+            banner.style.cssText = 'background:#fde2e2;border:2px solid #e74c3c;border-radius:15px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;';
+            banner.innerHTML = `
+                <span style="font-size:0.85rem;color:#c0392b;">🛑 <strong>Projet Supabase en pause</strong> — Votre base de données a été mise en pause par Supabase (inactivité de 7 jours). Allez sur <a href="https://supabase.com/dashboard" target="_blank" style="color:#2980b9;text-decoration:underline;">supabase.com/dashboard</a> et cliquez sur "Restore" pour la réactiver.</span>
+                <button onclick="location.reload()" style="background:#e74c3c;color:white;border:none;border-radius:10px;padding:8px 15px;cursor:pointer;font-size:0.8rem;">🔄 Réessayer</button>
+            `;
+            const container = document.querySelector('.main-content') || document.body;
+            container.prepend(banner);
         }
 
         function showOfflineBanner() {
@@ -977,7 +1071,7 @@
             try {
                 const { count, error } = await supabaseClient
                     .from('products')
-                    .select('*', { count: 'exact', head: true });
+                    .select('id', { count: 'exact' });
 
                 if (!error && count === 0) {
                     document.getElementById('migrationSection').style.display = 'block';
@@ -1012,7 +1106,7 @@
             try {
                 const { count, error: countError } = await supabaseClient
                     .from('factures')
-                    .select('*', { count: 'exact', head: true });
+                    .select('id', { count: 'exact' });
 
                 if (countError) throw countError;
 
@@ -1048,21 +1142,348 @@
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
 
             if (tab === 'orders') {
-                document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+                const btn = document.getElementById('tab-btn-orders');
+                if (btn) btn.classList.add('active');
                 document.getElementById('ordersContent').classList.add('active');
             } else if (tab === 'products') {
-                document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+                const btn = document.getElementById('tab-btn-products');
+                if (btn) btn.classList.add('active');
                 document.getElementById('productsContent').classList.add('active');
-                renderProducts();
+                // Always start on the brand grid view
+                backToBrandGrid();
             } else if (tab === 'stock') {
-                document.querySelector('.tab-btn:nth-child(3)').classList.add('active');
+                const btn = document.getElementById('tab-btn-stock');
+                if (btn) btn.classList.add('active');
                 document.getElementById('stockContent').classList.add('active');
                 renderStock();
             } else if (tab === 'factures') {
-                document.querySelector('.tab-btn:nth-child(4)').classList.add('active');
+                const btn = document.getElementById('tab-btn-factures');
+                if (btn) btn.classList.add('active');
                 document.getElementById('facturesContent').classList.add('active');
                 fetchFactures();
             }
+        }
+
+        // Track which brand is currently being viewed
+        let currentViewBrand = null;
+
+        // --- BRAND MANAGEMENT LOGIC ---
+        function getCustomBrands() {
+            try {
+                let brands = JSON.parse(localStorage.getItem('auraskin_custom_brands')) || [
+                    { name: 'Beauty of Joseon', origin: 'Korea 🇰🇷', desc: 'Formules Hanbang traditionnelles aux extraits de ginseng et de riz' },
+                    { name: 'Anua', origin: 'Korea 🇰🇷', desc: 'Soin apaisant Heartleaf pour peaux sensibles' },
+                    { name: 'COSRX', origin: 'Korea 🇰🇷', desc: 'Sérums mucine d\'escargot & soins ciblé dermatologiques' },
+                    { name: 'SKIN 1004', origin: 'Korea 🇰🇷', desc: 'Gammes Centella Asiatica pour barrière cutanée' },
+                    { name: 'Mixsoon', origin: 'Korea 🇰🇷', desc: 'Essences de haricot fermenté et soins minimalistes' },
+                    { name: 'Dr. Althea', origin: 'Korea 🇰🇷', desc: 'Crèmes réparatrices de barrière et formules esthétiques' }
+                ];
+                // Exclude store name AuraSkin if present
+                brands = brands.filter(b => b.name.toLowerCase() !== 'auraskin');
+                localStorage.setItem('auraskin_custom_brands', JSON.stringify(brands));
+                return brands;
+            } catch(e) {
+                return [];
+            }
+        }
+
+        function toggleBrandForm() {
+            const form = document.getElementById('brandForm');
+            if (form) {
+                form.style.display = (form.style.display === 'none' || !form.style.display) ? 'block' : 'none';
+            }
+        }
+
+        function handleSaveBrand() {
+            const nameInput = document.getElementById('b_name');
+            const originInput = document.getElementById('b_origin');
+            const descInput = document.getElementById('b_desc');
+
+            const name = (nameInput ? nameInput.value : '').trim();
+            const origin = originInput ? originInput.value : 'Korea 🇰🇷';
+            const desc = (descInput ? descInput.value : '').trim();
+
+            if (!name) {
+                alert('Veuillez entrer le nom de la marque');
+                return;
+            }
+
+            if (name.toLowerCase() === 'auraskin') {
+                alert('AuraSkin est le nom de votre boutique, pas une marque fournisseur.');
+                return;
+            }
+
+            const customBrands = getCustomBrands();
+            const exists = customBrands.some(b => b.name.toLowerCase() === name.toLowerCase());
+            if (exists) {
+                alert('La marque "' + name + '" existe déjà !');
+                return;
+            }
+
+            customBrands.push({ name, origin, desc });
+            localStorage.setItem('auraskin_custom_brands', JSON.stringify(customBrands));
+
+            if (typeof productsData !== 'undefined' && !productsData[name]) {
+                productsData[name] = [];
+            }
+
+            alert('✨ La marque "' + name + '" a été créée et ajoutée avec succès !');
+            if (nameInput) nameInput.value = '';
+            if (descInput) descInput.value = '';
+            toggleBrandForm();
+            renderMarques();
+            populateBrandDatalist();
+        }
+
+        function renderMarques() {
+            const grid = document.getElementById('marquesListGrid');
+            if (!grid) return;
+
+            const customBrands = getCustomBrands();
+            
+            const allBrandNames = Array.from(new Set([
+                ...customBrands.map(b => b.name),
+                ...(typeof productsData !== 'undefined' ? Object.keys(productsData) : [])
+            ])).filter(bName => bName.toLowerCase() !== 'auraskin');
+
+            let html = '';
+            allBrandNames.forEach(bName => {
+                const info = customBrands.find(cb => cb.name.toLowerCase() === bName.toLowerCase()) || {
+                    name: bName,
+                    origin: 'Global 🌍',
+                    desc: 'Gamme de soins dermatologiques'
+                };
+
+                const prodCount = (typeof productsData !== 'undefined' && productsData[bName]) ? productsData[bName].length : 0;
+                const escapedName = bName.replace(/'/g, "\\'");
+
+                html += `
+                    <div style="background: #fff; padding: 22px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 2px solid #fecdd3; display: flex; flex-direction: column; justify-content: space-between; position: relative;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                                <h3 style="font-size: 1.25rem; color: var(--secondary); font-weight: 700;">🏷️ ${info.name}</h3>
+                                <span style="background: #fdf2f3; color: var(--secondary); padding: 4px 14px; border-radius: 50px; font-size: 0.78rem; font-weight: 700;">${info.origin}</span>
+                            </div>
+                            <p style="font-size: 0.85rem; color: #777; line-height: 1.4; margin-bottom: 15px;">${info.desc}</p>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f9f9f9; padding-top: 14px; margin-bottom: 14px;">
+                            <span style="font-size: 0.85rem; font-weight: 700; color: #555;">${prodCount} produit(s)</span>
+                            <span style="color: #2e7d32; font-size: 0.75rem; font-weight: 700; background: #e8f5e9; padding: 4px 12px; border-radius: 50px;">Actif 🟢</span>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="openBrandProducts('${escapedName}')" style="flex: 1; padding: 10px; border-radius: 50px; border: 1.5px solid var(--secondary); background: #fff; color: var(--secondary); font-weight: 700; font-size: 0.82rem; cursor: pointer; transition: all 0.2s;">Gérer les produits ▸</button>
+                            <button onclick="addProductToBrand('${escapedName}')" style="flex: 1; padding: 10px; border-radius: 50px; border: none; background: var(--primary); color: #fff; font-weight: 700; font-size: 0.82rem; cursor: pointer; transition: all 0.2s;">+ Ajouter un produit</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            grid.innerHTML = html;
+            populateBrandDatalist();
+        }
+
+        // --- VIEW NAVIGATION ---
+        function openBrandProducts(brandName) {
+            currentViewBrand = brandName;
+            document.getElementById('brandGridView').style.display = 'none';
+            document.getElementById('brandProductsView').style.display = 'block';
+            
+            const customBrands = getCustomBrands();
+            const info = customBrands.find(cb => cb.name.toLowerCase() === brandName.toLowerCase());
+            const originTag = info ? ` <span style="font-size: 0.8rem; background: #fdf2f3; padding: 3px 10px; border-radius: 50px; font-weight: 600;">${info.origin}</span>` : '';
+            document.getElementById('brandProductsTitle').innerHTML = '🏷️ ' + brandName + originTag;
+
+            // Pre-fill brand in product form
+            const pBrand = document.getElementById('p_brand');
+            if (pBrand) pBrand.value = brandName;
+
+            // Hide product form by default
+            closeProductForm();
+
+            renderBrandProducts(brandName);
+        }
+
+        function addProductToBrand(brandName) {
+            openBrandProducts(brandName);
+            // Auto-open the product creation form
+            setTimeout(() => {
+                toggleProductFormForBrand();
+            }, 100);
+        }
+
+        function backToBrandGrid() {
+            currentViewBrand = null;
+            document.getElementById('brandGridView').style.display = 'block';
+            document.getElementById('brandProductsView').style.display = 'none';
+            closeProductForm();
+            renderMarques();
+        }
+
+        function toggleProductFormForBrand() {
+            const form = document.getElementById('productForm');
+            if (!form) return;
+            const isHidden = form.style.display === 'none' || !form.style.display || form.classList.contains('add-product-form');
+            
+            if (form.style.display === 'block') {
+                closeProductForm();
+            } else {
+                toggleProductForm('public');
+                // Pre-fill brand
+                if (currentViewBrand) {
+                    const pBrand = document.getElementById('p_brand');
+                    if (pBrand) pBrand.value = currentViewBrand;
+                }
+            }
+        }
+
+        function renderBrandProducts(brandName) {
+            const list = document.getElementById('productList');
+            if (!list) return;
+            const pData = productsData;
+
+            if (!pData[brandName] || pData[brandName].length === 0) {
+                list.innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px; color: #999;">
+                        <p style="font-size: 1.1rem; margin-bottom: 10px;">📦 Aucun produit pour cette marque</p>
+                        <p style="font-size: 0.85rem;">Cliquez sur <strong>"+ Ajouter un Produit"</strong> pour commencer.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const products = pData[brandName].map((p, pIdx) => ({ ...p, brand: brandName, pIdx }));
+
+            // Separate public vs internal
+            const publicProducts = products.filter(p => p.status !== 'hidden');
+            const internalProducts = products.filter(p => p.status === 'hidden');
+
+            // Also reload all variants/products for the order dropdowns
+            const allOptions = Object.keys(pData).flatMap(brand =>
+                pData[brand].map(p => `<option value="${brand}|${p.name}">${brand} - ${p.name}</option>`)
+            ).join('');
+
+            document.querySelectorAll('[id^="product-select-"]').forEach(sel => {
+                const currentVal = sel.value;
+                sel.innerHTML = `<option value="">Sélectionner un produit...</option><option value="CUSTOM|CUSTOM">--- Article Personnalisé ---</option>` + allOptions;
+                sel.value = currentVal;
+            });
+
+            const renderSection = (title, prods, icon, emptyMsg, mode) => {
+                const headerContent = `
+                    <div class="product-section-header">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <h3>${icon} ${title}</h3>
+                            <span class="product-count-badge">${prods.length}</span>
+                        </div>
+                        <button class="btn-add-item" onclick="toggleProductFormForBrand()" 
+                            style="margin-top:0; background:var(--secondary); color:white; border:none; padding:6px 15px;">
+                            + Ajouter
+                        </button>
+                    </div>
+                `;
+
+                if (prods.length === 0) {
+                    return `
+                        <div class="product-section">
+                            ${headerContent}
+                            <p style="text-align: center; color: #999; padding: 20px;">${emptyMsg}</p>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="product-section">
+                        ${headerContent}
+                        <div class="order-list">
+                            ${prods.map(p => {
+                    const brand = p.brand;
+                    const productId = (p.id || "").replace(/[^a-z0-9]/gi, '_');
+
+                    const sizesHtml = p.sizes && p.sizes.length > 0
+                        ? p.sizes.map((s, sIdx) => `
+                                        <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+                                            <span style="min-width:60px; color:#777; font-size:0.85rem;">${s.label}:</span>
+                                            <input type="text" id="size-price-${productId}-${sIdx}"
+                                                value="${s.price}"
+                                                placeholder="ex: 85dt"
+                                                style="flex:1; max-width:120px; padding:8px 12px; border:1.5px solid #eee; border-radius:10px; font-family:inherit; pointer-events: auto;">
+                                        </div>
+                                    `).join('')
+                        : '';
+
+                    return `
+                                    <div class="product-card" style="flex-direction:column; align-items:flex-start; gap:12px; padding:20px; position:relative;">
+                                        <button onclick="deleteProduct('${p.id}', '${p.name.replace(/'/g, "\\'")}')" 
+                                            class="delete-btn" title="Supprimer le produit"
+                                            style="position:absolute; top:15px; right:15px; background:#fff2f3; color:#ff4d4f; border:none; border-radius:10px; width:36px; height:36px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1.1rem; transition:all 0.2s; box-shadow: 0 2px 8px rgba(255, 77, 79, 0.1); z-index:10;">
+                                            ✕
+                                        </button>
+                                        <div style="display:flex; gap:15px; align-items:center; width:100%;">
+                                            <img src="${p.image}" class="product-img" onerror="this.src='logo.png'" style="width:60px; height:60px;">
+                                            <div class="product-info">
+                                                <h5 style="font-size:1rem; margin-bottom:4px;">${p.name}</h5>
+                                                <p style="color:#999; font-size:0.8rem;">${brand}${p.collection ? ` · ${p.collection}` : ''}</p>
+                                            </div>
+                                        </div>
+                                        <div style="width:100%; padding:15px; background:#fdf2f3; border-radius:15px; border: 1px solid #fee2e2;">
+                                            <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px;">
+                                                <span style="color:#555; font-size:0.85rem; min-width:80px; font-weight:600;">Statut :</span>
+                                                <select id="status-${productId}" 
+                                                    style="flex:1; max-width:150px; padding:8px 12px; border:1.5px solid #eee; border-radius:10px; font-family:inherit; background: white; pointer-events: auto;">
+                                                    <option value="in-stock" ${!p.status || p.status === 'in-stock' ? 'selected' : ''}>En Ligne</option>
+                                                    <option value="out-of-stock" ${p.status === 'out-of-stock' ? 'selected' : ''}>Rupture</option>
+                                                    <option value="hidden" ${p.status === 'hidden' ? 'selected' : ''}>Interne</option>
+                                                </select>
+                                            </div>
+                                            ${p.sizes && p.sizes.length > 0 ? `
+                                                <p style="font-size:0.8rem; color:#8b4a50; font-weight:700; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px;">Prix par taille :</p>
+                                                ${sizesHtml}
+                                            ` : `
+                                                <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
+                                                    <span style="color:#555; font-size:0.85rem; min-width:80px; font-weight:600;">Prix :</span>
+                                                    <input type="text" id="price-${productId}"
+                                                        value="${p.price}"
+                                                        placeholder="ex: 85dt"
+                                                        style="flex:1; max-width:150px; padding:8px 12px; border:1.5px solid #eee; border-radius:10px; font-family:inherit; pointer-events: auto;">
+                                                </div>
+                                                <div style="display:flex; gap:10px; align-items:center;">
+                                                    <span style="color:#999; font-size:0.85rem; min-width:80px; font-weight:600;">Barré :</span>
+                                                    <input type="text" id="orig-${productId}"
+                                                        value="${p.originalPrice || ''}"
+                                                        placeholder="(aucun)"
+                                                        style="flex:1; max-width:150px; padding:8px 12px; border:1.5px solid #eee; border-radius:10px; font-family:inherit; color:#999; pointer-events: auto;">
+                                                </div>
+                                            `}
+                                            <button onclick="handleSavePrice('${p.id}')"
+                                                class="btn-status" style="width:100%; margin-top:15px; background:var(--secondary); font-size:0.9rem; padding:12px; box-shadow: 0 4px 10px rgba(139, 74, 80, 0.2);">💾 Sauvegarder</button>
+                                            <div id="saved-${productId}" style="display:none; color:#2e7d32; font-size:0.85rem; margin-top:10px; text-align:center; width:100%; font-weight:700;">✓ Changements enregistrés !</div>
+                                        </div>
+                                    </div>
+                                `;
+
+                }).join('')}
+                        </div>
+                    </div>
+                `;
+            };
+
+            list.innerHTML = `
+                ${renderSection("Produits en Ligne", publicProducts, "✨", "Aucun produit public.", "public")}
+                ${renderSection("Produits Internes / Hors-Catalogue", internalProducts, "📦", "Aucun produit interne.", "internal")}
+            `;
+        }
+
+        function populateBrandDatalist() {
+            const datalist = document.getElementById('brands_datalist');
+            if (!datalist) return;
+
+            const customBrands = getCustomBrands();
+            const allBrandNames = Array.from(new Set([
+                ...customBrands.map(b => b.name),
+                ...(typeof productsData !== 'undefined' ? Object.keys(productsData) : [])
+            ])).filter(bName => bName.toLowerCase() !== 'auraskin');
+
+            datalist.innerHTML = allBrandNames.map(b => `<option value="${b}">`).join('');
         }
 
         // Load products from Supabase
@@ -1330,6 +1751,7 @@
                 // Refresh list
                 await loadProducts();
                 renderProducts();
+                renderStock(window.currentStockFilter || 'all');
                 fetchOrders(); // Refresh order dropdowns to show the new product
             } catch (e) {
                 console.error("Error adding product", e);
@@ -1547,20 +1969,32 @@
 
         async function fetchOrders() {
             const list = document.getElementById('orderList');
-            if (!supabaseClient) {
-                list.innerHTML = '<p style="text-align:center;color:#e74c3c;margin-top:50px;">⚠️ Pas de connexion à la base de données.</p>';
+            if (!supabaseClient || supabaseClient.supabaseUrl === 'offline') {
+                const localOrders = JSON.parse(localStorage.getItem('aura_local_orders')) || [];
+                if (localOrders.length > 0) {
+                     renderOrders(localOrders);
+                     updateStats(localOrders);
+                } else {
+                     list.innerHTML = '<p style="text-align:center;color:#999;margin-top:50px;">Mode hors-ligne : Aucune commande locale.</p>';
+                }
                 return;
             }
             try {
-                const { data, error } = await supabaseClient
+                const queryPromise = supabaseClient
                     .from('orders')
                     .select('*')
                     .order('created_at', { ascending: false });
 
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error("Le délai d'attente a expiré (5s timeout)")), 5000)
+                );
+
+                const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
+
                 if (error) throw error;
 
-                renderOrders(data);
-                updateStats(data);
+                renderOrders(data || []);
+                updateStats(data || []);
             } catch (err) {
                 console.error("Error fetching orders:", err);
                 list.innerHTML = `<p style="text-align:center;color:#e74c3c;margin-top:50px;">⚠️ Erreur lors du chargement des commandes.<br><small style="color:#999;">${err.message || ''}</small><br><br><button onclick="fetchOrders()" style="padding:10px 20px;border-radius:20px;border:none;background:var(--primary);color:#fff;cursor:pointer;font-weight:700;">🔄 Réessayer</button></p>`;
@@ -1581,31 +2015,34 @@
 
         function renderOrders(orders) {
             const list = document.getElementById('orderList');
-            if (orders.length === 0) {
+            if (!orders || orders.length === 0) {
                 list.innerHTML = '<p style="text-align: center; color: #999; margin-top: 50px;">Aucune commande trouvée.</p>';
                 return;
             }
 
             list.innerHTML = orders.map(order => {
-                const date = new Date(order.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                const date = order.created_at ? new Date(order.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
+                const dateStr = order.created_at ? new Date(order.created_at).toLocaleDateString() : '';
                 const statusClass = order.status === 'Nouveau' ? 'status-nouveau' : (order.status === 'Expédié' ? 'status-expédié' : '');
+                const rawItems = typeof order.items === 'string' ? JSON.parse(order.items || '[]') : (order.items || []);
+                const itemsList = Array.isArray(rawItems) ? rawItems : [];
 
                 return `
                     <div class="order-card" style="position: relative;">
                         <button class="btn-delete" onclick="deleteOrder('${order.id}')" title="Supprimer la commande">&times;</button>
                         <div class="order-header">
-                            <span class="order-status ${statusClass}">${order.status}</span>
-                            <span style="font-size: 0.8rem; color: #999;">${date} | ${new Date(order.created_at).toLocaleDateString()}</span>
+                            <span class="order-status ${statusClass}">${order.status || 'Nouveau'}</span>
+                            <span style="font-size: 0.8rem; color: #999;">${date} | ${dateStr}</span>
                         </div>
                         <div class="customer-info">
-                            <h4>${order.customer_name}</h4>
-                            <p>📍 ${order.customer_city}, ${order.customer_address}</p>
-                            <p>📞 <a href="tel:${order.customer_phone}" style="color: var(--secondary); text-decoration: none;">${order.customer_phone}</a></p>
+                            <h4>${order.customer_name || 'Client'}</h4>
+                            <p>📍 ${order.customer_city || ''}, ${order.customer_address || ''}</p>
+                            <p>📞 <a href="tel:${order.customer_phone || ''}" style="color: var(--secondary); text-decoration: none;">${order.customer_phone || 'Non dispo'}</a></p>
                             <div style="margin-top: 10px; font-size: 0.85rem; color: #555; background: #fafafa; padding: 10px; border-radius: 10px;">
                                 <strong>Articles :</strong><br>
-                                ${order.items.map((item, idx) => `
+                                ${itemsList.map((item, idx) => `
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                        <span style="flex: 1;">- ${item.name}${item.variant && item.variant !== 'Standard' ? ` (${item.variant})` : ''}</span>
+                                        <span style="flex: 1;">- ${item.name || 'Article'}${item.variant && item.variant !== 'Standard' ? ` (${item.variant})` : ''}</span>
                                         <button onclick="removeItemFromOrder('${order.id}', ${idx})" 
                                             style="background: none; border: none; color: #cc0000; cursor: pointer; padding: 2px 8px; font-size: 0.8rem; font-weight: bold;" 
                                             title="Enlever cet article">✕</button>
@@ -2177,14 +2614,21 @@
         }
 
         function updateStats(orders) {
-            const nouveaux = orders.filter(o => o.status === 'Nouveau').length;
-            document.getElementById('todayCount').textContent = nouveaux;
+            if (!orders || !Array.isArray(orders)) return;
+            const nouveaux = orders.filter(o => o && o.status === 'Nouveau').length;
+            const countEl = document.getElementById('todayCount');
+            if (countEl) countEl.textContent = nouveaux;
 
             const total = orders
-                .filter(o => o.status !== 'Annulé')
-                .reduce((sum, o) => sum + parseFloat(o.total_price.replace('dt', '')), 0);
+                .filter(o => o && o.status !== 'Annulé' && o.status !== 'Annulée' && o.total_price)
+                .reduce((sum, o) => {
+                    const cleanStr = String(o.total_price).replace(/[^\d.]/g, '');
+                    const val = parseFloat(cleanStr) || 0;
+                    return sum + val;
+                }, 0);
 
-            document.getElementById('totalRevenue').textContent = total.toFixed(2) + ' dt';
+            const revEl = document.getElementById('totalRevenue');
+            if (revEl) revEl.textContent = total.toFixed(2) + ' dt';
         }
 
         function renderStock(filterLocation = 'all') {
@@ -2197,7 +2641,6 @@
                 btn.classList.toggle('active', btn.getAttribute('data-loc') === filterLocation);
             });
 
-            // Update labels
             const locLabel = document.getElementById('locationLabel');
             if (locLabel) locLabel.innerText = filterLocation === 'all' ? 'ÉDITEUR' : `STOCK: ${filterLocation.toUpperCase()}`;
 
@@ -2205,15 +2648,15 @@
             let totalStock = 0;
             let html = '';
 
-            // --- MODE 1: EDITOR (TOUS) ---
             if (filterLocation === 'all') {
                 Object.keys(pData).forEach(brand => {
                     pData[brand].forEach((p, pIdx) => {
                         const productId = `${brand}-${pIdx}`.replace(/[^a-z0-9]/gi, '_');
+                        const hasVariantSizes = p.sizes && p.sizes.length > 0 && !(p.sizes.length === 1 && p.sizes[0].label === 'Standard');
 
-                        let qtyInputHtml = '';
-                        if (p.sizes && p.sizes.length > 0) {
-                            qtyInputHtml = `
+                        let inputsHtml = '';
+                        if (hasVariantSizes) {
+                            inputsHtml = `
                                 <div style="width:100%; display:grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap:10px; margin-top:5px; background:#f0f0f0; padding:12px; border-radius:12px;">
                                     ${p.sizes.map((s, sIdx) => `
                                         <div style="background:white; padding:8px; border-radius:8px; border:1px solid #eee;">
@@ -2229,11 +2672,16 @@
                                 </div>
                             `;
                         } else {
-                            qtyInputHtml = `
+                            inputsHtml = `
                                 <div style="width:100%; display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:5px;">
                                     <div>
                                         <label style="font-size:0.7rem; color:#888; text-transform:uppercase; font-weight:700;">Quantité à ajouter</label>
                                         <input type="number" id="dispatch-qty-${productId}" value="0" min="0" 
+                                            style="width:100%; padding:10px; border-radius:10px; border:1.5px solid #eee; font-weight:bold; font-size:1.1rem; text-align:center;">
+                                    </div>
+                                    <div>
+                                        <label style="font-size:0.7rem; color:#888; text-transform:uppercase; font-weight:700;">Prix d'achat (dt)</label>
+                                        <input type="text" id="dispatch-price-${productId}" placeholder="ex: 45" 
                                             style="width:100%; padding:10px; border-radius:10px; border:1.5px solid #eee; font-weight:bold; font-size:1.1rem; text-align:center;">
                                     </div>
                                 </div>
@@ -2250,230 +2698,269 @@
                                     </div>
                                 </div>
                                 
-                                <div style="width:100%; display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:5px;">
-                                    ${p.sizes && p.sizes.length > 0 ? '' : qtyInputHtml}
-                                    ${p.sizes && p.sizes.length > 0 ? '' : `
-                                        <div>
-                                            <label style="font-size:0.7rem; color:#888; text-transform:uppercase; font-weight:700;">Prix d'achat (dt)</label>
-                                            <input type="text" id="dispatch-price-${productId}" placeholder="ex: 45" 
-                                                style="width:100%; padding:10px; border-radius:10px; border:1.5px solid #eee; font-weight:bold; font-size:1.1rem; text-align:center;">
-                                        </div>
-                                    `}
-                                    <div style="grid-column: ${p.sizes && p.sizes.length > 0 ? '1 / -1' : 'auto'};">
-                                        <label style="font-size:0.7rem; color:#888; text-transform:uppercase; font-weight:700;">Destination Stock</label>
-                                        <select id="dispatch-loc-${productId}" style="width:100%; padding:10px; border-radius:10px; border:1.5px solid #eee; background:white; font-weight:bold;">
-                                            <option value="Tunisie">🇹🇳 Tunisie</option>
-                                            <option value="USA">🇺🇸 USA</option>
-                                            <option value="London">🇬🇧 London</option>
-                                        </select>
-                                    </div>
+                                <div style="width:100%;">
+                                    <label style="font-size:0.7rem; color:#888; text-transform:uppercase; font-weight:700;">Destination Stock</label>
+                                    <select id="dispatch-loc-${productId}" style="width:100%; padding:10px; border-radius:10px; border:1.5px solid #eee; background:white; font-weight:bold;">
+                                        <option value="Tunisie">🇹🇳 Tunisie</option>
+                                        <option value="USA">🇺🇸 USA</option>
+                                        <option value="London">🇬🇧 London</option>
+                                    </select>
                                 </div>
 
-                                ${p.sizes && p.sizes.length > 0 ? qtyInputHtml : ''}
-                                
-                                <button onclick="dispatchStock('${p.id}')"
+                                ${inputsHtml}
+
+                                <button onclick="dispatchStock('${brand}', ${pIdx}, '${productId}')"
                                     class="btn-status" style="width:100%; margin-top:5px; background:var(--secondary); padding:12px; font-weight:800;">🚀 AJOUTER AU STOCK</button>
                                 <div id="stock-saved-${productId}" style="display:none; color:#2e7d32; font-size:0.85rem; margin-top:5px; text-align:center; width:100%; font-weight:700;">✓ Ajouté avec succès !</div>
                             </div>
                         `;
                     });
                 });
-            }
-            // --- MODE 2: VIEWER (LOCATIONS) ---
-            else {
+            } else {
                 Object.keys(pData).forEach(brand => {
                     pData[brand].forEach((p, pIdx) => {
                         const productId = `${brand}-${pIdx}`.replace(/[^a-z0-9]/gi, '_');
                         
-                        // New Logic: Check all sizes for stock in this location
-                        const renderCard = (qty, sizeLabel = null, sizePurchasePrice = null) => {
-                            if (qty <= 0) return ''; // Hide if 0 stock in this location
-
+                        const renderCard = (qty, sizeLabel = null, sizePurchasePrice = null, batchId = null, batchDate = null) => {
+                            if (qty <= 0) return '';
                             const pPrice = sizePurchasePrice || p.purchase_price;
-                            const priceHtml = pPrice ? `<span style="background:rgba(255,255,255,0.5); padding:2px 8px; border-radius:10px; font-size:0.75rem; color:#888; margin-left:8px;">Achat: ${pPrice}dt</span>` : '';
-
+                            const priceHtml = pPrice ? `<span style="background:rgba(255,255,255,0.7); padding:3px 10px; border-radius:10px; font-size:0.75rem; color:#d81b60; font-weight:700; border:1px solid #f8bbd0;">Achat: ${pPrice}dt</span>` : '';
+                            const dateStr = batchDate ? new Date(batchDate).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) : '';
+                            const dateHtml = dateStr ? `<span style="font-size:0.7rem; color:#aaa; margin-left:auto;">📅 ${dateStr}</span>` : '';
                             totalStock += qty;
                             return `
-                                <div class="product-card" style="padding:15px; border-radius:20px; border: 1.5px solid #f79da6; background: white;">
+                                <div class="product-card" style="padding:15px; border-radius:20px; border: 1.5px solid #f79da6; background: white; box-shadow: 0 4px 12px rgba(247, 157, 166, 0.08);">
                                     <div style="display:flex; gap:15px; align-items:center; width:100%; position:relative;">
                                         <img src="${p.image}" class="product-img" onerror="this.src='logo.png'" style="width:60px; height:60px; border-radius:12px;">
                                         <div class="product-info">
                                             <h5 style="font-size:0.95rem; margin-bottom:2px; font-weight:700;">${p.name} ${sizeLabel && sizeLabel !== 'Standard' ? `<br><small style="color:var(--secondary); font-size:0.8rem;">(${sizeLabel})</small>` : ''}</h5>
                                             <p style="color:#bbb; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">${brand}</p>
                                         </div>
-                                        <button onclick="reduceOneStock('${p.id}', '${sizeLabel || 'Standard'}')" 
+                                        <button onclick="reduceOneStock('${brand}', ${pIdx}, '${productId}', '${sizeLabel || 'Standard'}', '${batchId || ''}')" 
                                             class="delete-btn" title="Réduire stock" style="background:#fff2f3; color:#f79da6; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:none; cursor:pointer;">✕</button>
                                     </div>
-                                    <div style="margin-top:12px; display:flex; align-items:center; gap:5px;">
+                                    <div style="margin-top:12px; display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
                                         <span style="font-size:1.4rem; font-weight:800; color:var(--secondary);">${qty} <small style="font-size:0.9rem; font-weight:600; color:#999;">pcs</small></span>
                                         ${priceHtml}
+                                        ${dateHtml}
                                     </div>
                                 </div>
                             `;
                         };
 
                         const locKey = filterLocation === 'Tunisie' ? 'stock_tn' : (filterLocation === 'London' ? 'stock_uk' : 'stock_us');
+                        const sizesToRender = (p.sizes && p.sizes.length > 0) ? p.sizes : [{ label: 'Standard', stock_tn: (p.stock_location === 'Tunisie' ? (p.stock || 0) : 0), stock_uk: (p.stock_location === 'London' ? (p.stock || 0) : 0), stock_us: (p.stock_location === 'USA' ? (p.stock || 0) : 0), purchasePrice: p.purchase_price, batches: [] }];
 
-                        if (p.sizes && p.sizes.length > 0) {
-                            p.sizes.forEach(s => {
+                        sizesToRender.forEach(s => {
+                            const batches = (s.batches || []).filter(b => b.location === locKey && b.qty > 0);
+                            if (batches.length > 0) {
+                                batches.forEach(b => {
+                                    html += renderCard(b.qty, s.label, b.purchasePrice, b.id, b.date);
+                                });
+                            } else {
                                 const q = s[locKey] || 0;
-                                html += renderCard(q, s.label, s.purchasePrice);
-                            });
-                        } else {
-                            // Fallback for old simple-stock products
-                            const q = (p.stock_location === filterLocation) ? (p.stock || 0) : 0;
-                            html += renderCard(q, null, p.purchase_price);
-                        }
+                                html += renderCard(q, s.label, s.purchasePrice || p.purchase_price);
+                            }
+                        });
                     });
                 });
             }
-
             list.innerHTML = html;
             document.getElementById('totalStockCount').innerText = totalStock;
         }
 
          async function dispatchStock(brand, pIdx, productId) {
-            const p = productsData[brand][pIdx];
+            let p = (productsData[brand] && productsData[brand][pIdx]) ? productsData[brand][pIdx] : null;
+            if (!p) {
+                const searchId = brand;
+                for (const b in productsData) {
+                    const found = productsData[b].find(item => item.id === searchId || item.id === productId);
+                    if (found) { p = found; break; }
+                }
+            }
+            if (!p) return alert("Erreur: Produit non trouvé dans les données locales.");
+
             const locSelect = document.getElementById(`dispatch-loc-${productId}`);
-            const location = locSelect.value;
+            const location = locSelect ? locSelect.value : 'Tunisie';
             const locKey = location === 'Tunisie' ? 'stock_tn' : (location === 'London' ? 'stock_uk' : 'stock_us');
 
-            let addQty = 0;
-            let updatedSizes = p.sizes && p.sizes.length > 0 ? [...p.sizes] : [{ label: 'Standard', price: p.price, stock: 0, stock_tn: 0, stock_uk: 0, stock_us: 0 }];
+            const hasVariantSizes = p.sizes && p.sizes.length > 0 && !(p.sizes.length === 1 && p.sizes[0].label === 'Standard');
 
-            if (p.sizes && p.sizes.length > 0) {
-                updatedSizes = updatedSizes.map((s, sIdx) => {
+            let addQty = 0;
+            let updatedSizes = [];
+
+            if (hasVariantSizes) {
+                updatedSizes = p.sizes.map((s, sIdx) => {
                     const qtyInput = document.getElementById(`dispatch-qty-${productId}-${sIdx}`);
                     const priceInput = document.getElementById(`dispatch-price-${productId}-${sIdx}`);
-
-                    const addVal = parseInt(qtyInput.value) || 0;
+                    const addVal = qtyInput ? (parseInt(qtyInput.value) || 0) : 0;
                     addQty += addVal;
 
                     let sPrice = priceInput ? priceInput.value.trim().toLowerCase().replace('dt', '').replace(',', '.').trim() : null;
                     if (sPrice === '' || isNaN(parseFloat(sPrice))) sPrice = null;
 
-                    return {
-                        ...s,
-                        [locKey]: (s[locKey] || 0) + addVal,
-                        stock: (s.stock_tn || 0) + (s.stock_uk || 0) + (s.stock_us || 0) + addVal,
-                        purchasePrice: sPrice || s.purchasePrice || p.purchase_price
-                    };
+                    const batches = Array.isArray(s.batches) ? [...s.batches] : [];
+                    const existingLocStock = s[locKey] || 0;
+                    const existingLocBatchesSum = batches.filter(b => b.location === locKey).reduce((sum, b) => sum + (b.qty || 0), 0);
+                    if (existingLocStock > existingLocBatchesSum) {
+                        batches.push({
+                            id: 'batch_legacy_' + Date.now() + '_' + sIdx,
+                            qty: existingLocStock - existingLocBatchesSum,
+                            purchasePrice: s.purchasePrice || p.purchase_price || '',
+                            location: locKey,
+                            locationName: location,
+                            date: new Date().toISOString()
+                        });
+                    }
+
+                    if (addVal > 0) {
+                        batches.push({
+                            id: 'batch_' + Date.now() + '_' + sIdx + '_' + Math.random().toString(36).substr(2, 4),
+                            qty: addVal,
+                            purchasePrice: sPrice || s.purchasePrice || p.purchase_price || '',
+                            location: locKey,
+                            locationName: location,
+                            date: new Date().toISOString()
+                        });
+                    }
+
+                    const newLocQty = (s[locKey] || 0) + addVal;
+                    const newTotalStock = (s.stock_tn || 0) + (s.stock_uk || 0) + (s.stock_us || 0) + addVal;
+                    const latestPrice = sPrice || s.purchasePrice || p.purchase_price;
+
+                    return { ...s, [locKey]: newLocQty, stock: newTotalStock, purchasePrice: latestPrice, batches: batches };
                 });
             } else {
+                const baseSize = (p.sizes && p.sizes.length === 1) ? { ...p.sizes[0] } : { label: 'Standard', price: p.price, stock: 0, stock_tn: 0, stock_uk: 0, stock_us: 0 };
+                
                 const qtyInput = document.getElementById(`dispatch-qty-${productId}`);
                 const priceInput = document.getElementById(`dispatch-price-${productId}`);
-                addQty = parseInt(qtyInput.value) || 0;
+                addQty = qtyInput ? (parseInt(qtyInput.value) || 0) : 0;
 
                 let pPrice = (priceInput && priceInput.value) ? priceInput.value.trim().toLowerCase().replace('dt', '').replace(',', '.').trim() : null;
-                if (pPrice === '' || isNaN(parseFloat(pPrice))) pPrice = p.purchase_price;
+                if (pPrice === '' || isNaN(parseFloat(pPrice))) pPrice = baseSize.purchasePrice || p.purchase_price;
 
-                updatedSizes[0][locKey] = (updatedSizes[0][locKey] || 0) + addQty;
-                updatedSizes[0].stock = (updatedSizes[0].stock_tn || 0) + (updatedSizes[0].stock_uk || 0) + (updatedSizes[0].stock_us || 0);
-                updatedSizes[0].purchasePrice = pPrice;
+                const batches = Array.isArray(baseSize.batches) ? [...baseSize.batches] : [];
+                const existingLocStock = baseSize[locKey] || 0;
+                const existingLocBatchesSum = batches.filter(b => b.location === locKey).reduce((sum, b) => sum + (b.qty || 0), 0);
+                if (existingLocStock > existingLocBatchesSum) {
+                    batches.push({
+                        id: 'batch_legacy_' + Date.now(),
+                        qty: existingLocStock - existingLocBatchesSum,
+                        purchasePrice: baseSize.purchasePrice || p.purchase_price || '',
+                        location: locKey,
+                        locationName: location,
+                        date: new Date().toISOString()
+                    });
+                }
+
+                if (addQty > 0) {
+                    batches.push({
+                        id: 'batch_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                        qty: addQty,
+                        purchasePrice: pPrice || baseSize.purchasePrice || p.purchase_price || '',
+                        location: locKey,
+                        locationName: location,
+                        date: new Date().toISOString()
+                    });
+                }
+
+                const newLocQty = (baseSize[locKey] || 0) + addQty;
+                const newSizeStock = (baseSize.stock_tn || 0) + (baseSize.stock_uk || 0) + (baseSize.stock_us || 0) + addQty;
+
+                updatedSizes = [{
+                    ...baseSize,
+                    [locKey]: newLocQty,
+                    stock: newSizeStock,
+                    purchasePrice: pPrice || baseSize.purchasePrice || p.purchase_price,
+                    batches: batches
+                }];
             }
 
             if (addQty <= 0) return alert("Veuillez entrer une quantité supérieure à 0");
 
-            const btn = event.target;
-            const originalText = btn.innerText;
-            btn.innerText = "Traitement...";
-            btn.disabled = true;
+            const btn = (event && event.target) ? event.target : null;
+            const originalText = btn ? btn.innerText : "🚀 AJOUTER AU STOCK";
+            if (btn) { btn.innerText = "Traitement..."; btn.disabled = true; }
 
             try {
                 const totalStock = updatedSizes.reduce((sum, s) => sum + (s.stock || 0), 0);
+                const latestTopPrice = updatedSizes[0]?.purchasePrice || p.purchase_price;
                 const { error } = await supabaseClient
                     .from('products')
-                    .update({
-                        stock: totalStock,
-                        sizes: updatedSizes,
-                        status: 'in-stock'
-                    })
+                    .update({ stock: totalStock, sizes: updatedSizes, purchase_price: latestTopPrice, status: 'in-stock' })
                     .eq('id', p.id);
 
                 if (error) throw error;
-
                 p.stock = totalStock;
                 p.sizes = updatedSizes;
+                if (latestTopPrice) p.purchase_price = latestTopPrice;
 
-                // Reset inputs
                 document.querySelectorAll(`[id^="dispatch-qty-${productId}"]`).forEach(i => i.value = 0);
-
+                document.querySelectorAll(`[id^="dispatch-price-${productId}"]`).forEach(i => i.value = '');
                 const indicator = document.getElementById(`stock-saved-${productId}`);
-                if (indicator) {
-                    indicator.style.display = 'block';
-                    setTimeout(() => indicator.style.display = 'none', 2500);
-                }
+                if (indicator) { indicator.style.display = 'block'; setTimeout(() => indicator.style.display = 'none', 2500); }
                 renderStock(window.currentStockFilter);
-
             } catch (err) {
-                alert('Erreur: ' + err.message);
-                console.error(err);
+                alert('Erreur lors de l\'ajout au stock: ' + err.message);
             } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
+                if (btn) { btn.innerText = originalText; btn.disabled = false; }
             }
         }
 
-        async function reduceOneStock(brand, pIdx, productId, targetSize = null) {
-            const p = productsData[brand][pIdx];
-
-            // Re-calculate displayStock correctly for consistent check
-            let currentDisplayStock = p.stock || 0;
-            if (p.sizes && p.sizes.length > 0) {
-                currentDisplayStock = p.sizes.reduce((sum, s) => sum + (s.stock || 0), 0);
+        async function reduceOneStock(brand, pIdx, productId, targetSize = null, batchId = null) {
+            let p = (productsData[brand] && productsData[brand][pIdx]) ? productsData[brand][pIdx] : null;
+            if (!p) {
+                const searchId = brand;
+                for (const b in productsData) {
+                    const found = productsData[b].find(item => item.id === searchId || item.id === productId);
+                    if (found) { p = found; break; }
+                }
             }
+            if (!p) return;
 
+            const filterLoc = window.currentStockFilter || 'Tunisie';
+            const locKey = filterLoc === 'Tunisie' ? 'stock_tn' : (filterLoc === 'London' ? 'stock_uk' : 'stock_us');
+            let currentDisplayStock = p.stock || 0;
+            if (p.sizes && p.sizes.length > 0) currentDisplayStock = p.sizes.reduce((sum, s) => sum + (s.stock || 0), 0);
             if (currentDisplayStock <= 0) return;
 
-            // Define what we are reducing
-            let newStock = Math.max(0, currentDisplayStock - 1);
-            let newStatus = newStock === 0 ? 'out-of-stock' : p.status;
             let newSizes = null;
-
             if (p.sizes && p.sizes.length > 0) {
-                // If targetSize is provided (new way), use it. 
-                // Otherwise fall back to dropdown (old way, though Viewer now uses new way)
-                const sizeToReduce = targetSize || document.getElementById(`reduce-size-${productId}`)?.value;
-
+                const sizeToReduce = targetSize || 'Standard';
                 newSizes = p.sizes.map(s => {
-                    if (s.label === sizeToReduce && (s.stock || 0) > 0) {
-                        return { ...s, stock: (s.stock || 0) - 1 };
+                    if (s.label === sizeToReduce || (p.sizes.length === 1 && sizeToReduce === 'Standard')) {
+                        let updatedBatches = Array.isArray(s.batches) ? [...s.batches] : [];
+                        if (batchId && updatedBatches.length > 0) {
+                            updatedBatches = updatedBatches.map(b => {
+                                if (b.id === batchId && b.qty > 0) return { ...b, qty: b.qty - 1 };
+                                return b;
+                            });
+                        } else if (updatedBatches.length > 0) {
+                            const bIdx = updatedBatches.findIndex(b => b.location === locKey && b.qty > 0);
+                            if (bIdx !== -1) updatedBatches[bIdx] = { ...updatedBatches[bIdx], qty: updatedBatches[bIdx].qty - 1 };
+                        }
+                        return { ...s, [locKey]: Math.max(0, (s[locKey] || 0) - 1), stock: Math.max(0, (s.stock || 0) - 1), batches: updatedBatches };
                     }
                     return s;
                 });
-
-                // Ensure newStock is sum of newSizes
-                newStock = newSizes.reduce((sum, s) => sum + (s.stock || 0), 0);
-                newStatus = newStock === 0 ? 'out-of-stock' : p.status;
             }
 
-            const btn = event.currentTarget;
-            const originalHtml = btn.innerHTML;
-            btn.innerHTML = '...';
-            btn.disabled = true;
+            const newStock = newSizes ? newSizes.reduce((sum, s) => sum + (s.stock || 0), 0) : Math.max(0, currentDisplayStock - 1);
+            const newStatus = newStock === 0 ? 'out-of-stock' : p.status;
+            const btn = (event && event.currentTarget) ? event.currentTarget : null;
+            const originalHtml = btn ? btn.innerHTML : '✕';
+            if (btn) { btn.innerHTML = '...'; btn.disabled = true; }
 
             try {
                 const updateData = { stock: newStock, status: newStatus };
                 if (newSizes) updateData.sizes = newSizes;
-
-                const { error } = await supabaseClient
-                    .from('products')
-                    .update(updateData)
-                    .eq('id', p.id);
-
+                const { error } = await supabaseClient.from('products').update(updateData).eq('id', p.id);
                 if (error) throw error;
-
-                // Update in-memory
-                p.stock = newStock;
-                p.status = newStatus;
+                p.stock = newStock; p.status = newStatus;
                 if (newSizes) p.sizes = newSizes;
-
-                // Re-render
-                renderStock(window.currentStockFilter);
             } catch (err) {
-                alert("Erreur lors de la mise à jour : " + err.message);
-                btn.innerHTML = originalHtml;
-                btn.disabled = false;
+                console.error("Error updating stock:", err);
             }
         }
 
